@@ -25,9 +25,9 @@ bool celebration = false; // Sættes til true sammen med racedone, og sættes ti
 int curr_task = 0;		  // For at teste specifikke udfordringer, skift dette tal
 
 // PID værdier
-float Kp = 0.4;
-float Ki = 0;
-float Kd = 1;
+float Kp = 0.15;
+float Ki = 0.000001;
+float Kd = 0.028;
 
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
@@ -35,11 +35,11 @@ int line_sensor_val;
 // Konstante variabler til lysværdierne af stregerne
 const float white_val = 64;
 // bane 64 - papir 73
-const float gray_val = 37;
+const float gray_val = 27;
 // bane 38 - papir 40
 const float black_val = 5;
 //bane 5 - papir 7
-const float speed = 10;
+const float speed = 20;
 
 // variabel til at holde information om den kalibrerede linje
 float perfect_line;
@@ -247,6 +247,6 @@ task calculatePID()
 	turn = (errors * Kp) + (error_sum * Ki) + (deltaErr * Kd);
 
 	// Set motor speed
-	setMotorSpeed(motorR, speed - (turn * (speed / 10)));
-	setMotorSpeed(motorL, speed + (turn * (speed / 10)));
+	setMotorSpeed(motorR, speed - ((turn * speed) / 10));
+	setMotorSpeed(motorL, speed + ((turn * speed) / 10));
 }
