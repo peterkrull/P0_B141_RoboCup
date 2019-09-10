@@ -2,8 +2,8 @@
 #pragma config(Sensor, S2, touchsens, sensorEV3_Touch)
 #pragma config(Sensor, S3, colorsens, sensorEV3_Color)
 #pragma config(Sensor, S4, homesens, sensorEV3_Touch)
-#pragma config(Motor, motorA, motorR, tmotorEV3_Large, PIDControl, encoder)
-#pragma config(Motor, motorB, motorL, tmotorEV3_Large, PIDControl, encoder)
+#pragma config(Motor, motorA, MotorL, tmotorEV3_Large, PIDControl, encoder)
+#pragma config(Motor, motorB, motorR, tmotorEV3_Large, PIDControl, encoder)
 #pragma config(Motor, motorC, grapmotor, tmotorEV3_Medium, PIDControl, encoder)
 
 // Bruges til slå specifikke opgaver til/fra
@@ -30,9 +30,9 @@ float speed = 25;		  // Robottens hastighed i PID-loopet.
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
 
-const float white_val = 73; // Variabel til værdien af den hvide del af banen
-const float gray_val = 40;  // Variabel til værdien af den grå del af banen
-const float black_val = 5;  // Variabel til værdien af den sorte del af banen
+float white_val = 73; // Variabel til værdien af den hvide del af banen
+float gray_val = 40;  // Variabel til værdien af den grå del af banen
+float black_val = 5;  // Variabel til værdien af den sorte del af banen
 
 task Linefollow_PID();
 //task grap_homing();
@@ -206,8 +206,8 @@ task Linefollow_PID() // Funktionen der bruges til at følge linjen ved brug af 
 	turn = (errors * Kp) + (error_sum * Ki) + (deltaErr * Kd);
 
 	// Set motor speed
-	setMotorSpeed(motorR, speed - ((turn * speed) / 10));
-	setMotorSpeed(motorL, speed + ((turn * speed) / 10));
+	setMotorSpeed(MotorL, speed - ((turn * speed) / 10));
+	setMotorSpeed(motorR, speed + ((turn * speed) / 10));
 }
 /*
 task grap_homing()
