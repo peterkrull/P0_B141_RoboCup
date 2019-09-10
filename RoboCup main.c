@@ -114,9 +114,9 @@ task main()
 			}
 		}
 
-		if (curr_task == 6 || curr_task == 8) // Det her vil ikke virke. Skal nok få det ordnet.
+		if (curr_task == 6|| curr_task == 8)
 		{
-			if (task6 == true || task8 == true) // Betingelser for udførelse af opgave 6 og 8
+			if (task6 == true && curr_task == 6|| task8 == true && curr_task == 8) // Betingelser for udførelse af opgave 6 og 8
 			{
 				// Indsæt opgave 6 og 8 loop her **********************
 			}
