@@ -2,7 +2,7 @@
 #pragma config(Sensor, S2, touchsens, sensorEV3_Touch)
 #pragma config(Sensor, S3, colorsens, sensorEV3_Color)
 #pragma config(Sensor, S4, homesens, sensorEV3_Touch)
-#pragma config(Motor, motorA, MotorL, tmotorEV3_Large, PIDControl, encoder)
+#pragma config(Motor, motorA, motorL, tmotorEV3_Large, PIDControl, encoder)
 #pragma config(Motor, motorB, motorR, tmotorEV3_Large, PIDControl, encoder)
 #pragma config(Motor, motorC, grapmotor, tmotorEV3_Medium, PIDControl, encoder)
 
@@ -36,14 +36,14 @@ float black_val = 5;  // Variabel til værdien af den sorte del af banen
 
 task Linefollow_PID();
 //task grap_homing();
-//task color_calibrate();
+task color_calibrate();
 task main()
 {
 	perfect_line = gray_val + ((white_val - gray_val) / 2);
 	while (racedone == false) // Main loop til at køre når race endnu ikke er færdig
 	{
 		line_sensor_val = SensorValue(colorsens); // Værdien der læses fra farvesensoren. Skal næsten altid bruges, og er derfor i starten af vores loop.
-
+		startTask(color_calibrate);				  // sørger for, at farverne altid kan blive kalibreret
 		//Line tacking function, kan slås til/fra ved at sætte linetrack = true; / linetrack = false;
 		if (linetrack == true)
 		{
@@ -189,9 +189,13 @@ task Linefollow_PID() // Funktionen der bruges til at følge linjen ved brug af 
 
 	int color_diff = white_val - gray_val / 2;
 	if (errors > color_diff)
+	{
 		errors = color_diff;
-	else if (errors > -color_diff)
+	}
+	else if (errors < -color_diff)
+	{
 		errors = -color_diff;
+	}
 
 	// Udregn sum af fejl : Integral
 	error_sum += errors;
@@ -206,7 +210,7 @@ task Linefollow_PID() // Funktionen der bruges til at følge linjen ved brug af 
 	turn = (errors * Kp) + (error_sum * Ki) + (deltaErr * Kd);
 
 	// Set motor speed
-	setMotorSpeed(MotorL, speed - ((turn * speed) / 10));
+	setMotorSpeed(motorL, speed - ((turn * speed) / 10));
 	setMotorSpeed(motorR, speed + ((turn * speed) / 10));
 }
 /*
@@ -227,45 +231,61 @@ task color_calibrate() // Funktion til kalibrering af farvesensor
 			{
 				color_cal = true; // igangsættes kalibrering
 				setLEDColor(ledGreenFlash);
+				sleep(500);
 			}
 		}
 	}
+
 	while (color_cal == true) // Når kalibrering er startet,
 	{
-		int data;
-		int statebutton;
-		data = SensorValue[colorsens];
+		int calstate = 0;
 
-		if (SensorValue(touchsens) == 1)
-		{
-			statebutton++;
-			setLEDColor(ledRedFlash);
-			sleep(700);
-		}
-		if (statebutton == 1) // kalibrering af grå farve
+		if (calstate == 0)
 		{
 			displayCenteredTextLine(2, "Calibrating");
 			displayCenteredTextLine(3, "color sensor");
+			sleep(1000);
+			calstate++;
 		}
 
-		displayCenteredTextLine(2, "gray: ", SensorValue[colorsens]);
-		if (statebutton == 2) // kalibrering af grå farve
+		if (calstate == 1)
 		{
-			gray_val = SensorValue[colorsens];
-			setLEDColor(ledGreenFlash);
-			sleep(700);
-			setLEDColor(ledRedFlash);
-			sleep(700);
+			displayCenteredTextLine(2, "gray: ", SensorValue[colorsens]);
+			displayCenteredTextLine(3, "press button to calibrate");
+			if (SensorValue[touchsens] == 1)
+			{
+				gray_val = SensorValue[colorsens];
+				eraseDisplay();
+				displayCenteredTextLine(2, "Gray calibrated");
+				setLEDColor(ledGreen);
+				sleep(500);
+				eraseDisplay();
+				setLEDColor(ledOff);
+				calstate++;
+			}
 		}
-		displayCenteredTextLine(2, "white: ", SensorValue[colorsens]);
-		if (statebutton == 3) // kalibrering af hvid farve
+
+		if (calstate == 2)
 		{
-			white_val = SensorValue[colorsens];
-			setLEDColor(ledGreenFlash);
-			sleep(700);
-			setLEDColor(ledRedFlash);
-			sleep(700);
+			displayCenteredTextLine(2, "white: ", SensorValue[colorsens]);
+			displayCenteredTextLine(3, "press button to calibrate");
+			if (SensorValue[touchsens] == 1)
+			{
+				white_val = SensorValue[colorsens];
+				eraseDisplay();
+				displayCenteredTextLine(2, "White calibrated");
+				setLEDColor(ledGreen);
+				sleep(500);
+				eraseDisplay();
+				setLEDColor(ledOff);
+				calstate++;
+			}
+		}
+		if (calstate == 3)
+		{
 			perfect_line = gray_val + ((white_val - gray_val) / 2);
+			displayCenteredTextLine(2, "Calibration done");
+			sleep(500);
 			eraseDisplay();
 			color_cal = false;
 		}
