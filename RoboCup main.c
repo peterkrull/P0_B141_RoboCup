@@ -19,6 +19,7 @@
 
 bool changetask = false; // bruges til at definere hvornår robotten er imellem to opgaver
 bool racedone = false;   // Sættes automatisk til sandt når task9 er gennemført
+bool count_blacks = true;// Bruges til at tænde og slukke for tælleren af sorte linjer
 int curr_task = 0;		 // For at teste specifikke udfordringer, skift dette tal
 int dir = 1;			 // sæt 1 for at køre på venstre side af grå streg, 0 for at køre på højre
 int black_counter;		 // Bruges til at holde styr på antallet af krydsede sorte linjer
@@ -139,7 +140,7 @@ void drive(float CM)
 
 void black_line_counter()
 {
-	if (time1[T2] > 2000 && SensorValue(colorsense) < 12 && SensorValue(calbutton) == 0)
+	if (time1[T2] > 2000 && SensorValue(colorsense) < 12 && SensorValue(calbutton) == 0 && count_blacks == true)
 	{
 		black_counter++;
 		clearTimer(T2);
