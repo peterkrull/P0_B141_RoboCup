@@ -1,7 +1,7 @@
-#pragma config(Sensor, S1, ultrasonic, sensorEV3_Ultrasonic)
-#pragma config(Sensor, S2, touchsens, sensorEV3_Touch)
-#pragma config(Sensor, S3, colorsens, sensorEV3_Color)
-#pragma config(Sensor, S4, homesens, sensorEV3_Touch)
+#pragma config(Sensor, S1, ultrasense, sensorEV3_Ultrasonic)
+#pragma config(Sensor, S2, calbutton, sensorEV3_Touch)
+#pragma config(Sensor, S3, colorsense, sensorEV3_Color)
+#pragma config(Sensor, S4, homesense, sensorEV3_Touch)
 #pragma config(Motor, motorA, motorL, tmotorEV3_Large, PIDControl, encoder)
 #pragma config(Motor, motorB, motorR, tmotorEV3_Large, PIDControl, encoder)
 #pragma config(Motor, motorC, grapmotor, tmotorEV3_Medium, PIDControl, encoder)
@@ -18,7 +18,6 @@
 #define task9 true  // Kør ind til midten af målstregen
 
 bool changetask = false;  // bruges til at definere hvornår robotten er imellem to opgaver
-bool linetrack = true;	// Bruges til at skifte mellem linetracking og frikørsel
 bool racedone = false;	// Sættes automatisk til sandt når task9 er gennemført
 bool celebration = false; // Sættes til true sammen med racedone, og sættes til false for at afslutte hele programmet.
 int curr_task = 0;		  // For at teste specifikke udfordringer, skift dette tal
@@ -30,25 +29,85 @@ float speed = 25;		  // Robottens hastighed i PID-loopet.
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
 
-float white_val = 73; // Variabel til værdien af den hvide del af banen
-float gray_val = 40;  // Variabel til værdien af den grå del af banen
+float white_val = 80; // Variabel til værdien af den hvide del af banen
+float gray_val = 43;  // Variabel til værdien af den grå del af banen
 float black_val = 5;  // Variabel til værdien af den sorte del af banen
 
-task Linefollow_PID();
+//
+// LINEFOLLOW PID FUNKTION
+//
+
+void Linefollow_PID(bool enable_tracking) // Funktionen der bruges til at følge linjen ved brug af PID-loop
+{
+	if (enable_tracking == true)
+	{
+		// PID konstanter
+		float Kp = 0.15;
+		float Ki = 0.000001;
+		float Kd = 0.028;
+
+		// variabler brugt til PID
+		float deltaErr = 0;
+		float turn = 0;
+		float errors = 0;
+		float error_sum = 0;
+		float prev_error = 0;
+		float color_diff;
+		int multi;
+
+		// brugt til at ændre siden som robotten følger (ændrer fortegnet for fejlen)
+		if (dir == 1)
+		{
+			multi = 1;
+		}
+		else if (dir == 0)
+		{
+			multi = -1;
+		}
+
+		// Udregn størrelsen af fejlen : Proportionel
+		errors = multi * (line_sensor_val - perfect_line);
+
+		color_diff = (white_val - gray_val) / 2; // Udregner størrelsen af farveforskellen mellem hvid, error og grå
+		if (errors > color_diff)				 // Hvis fejlen er større end den målte hvide farve
+		{
+			errors = color_diff; // sæt fejlen lig den hvide farve
+		}
+		else if (errors < (-color_diff)) // Hvis fejlen er større end den målte grå farve
+		{
+			errors = (-color_diff); // sæt fejlen lig den grå farve
+		}
+
+		// Udregn sum af fejl : Integral
+		error_sum += errors;
+
+		// Udregn fejl delta : Differentiale
+		deltaErr = errors - prev_error;
+
+		// Game nuværende som forrige
+		prev_error = errors;
+
+		// Calculate PID
+		turn = (errors * Kp) + (error_sum * Ki) + (deltaErr * Kd);
+
+		// Set motor speed
+		setMotorSpeed(motorL, speed - ((turn * speed) / 10));
+		setMotorSpeed(motorR, speed + ((turn * speed) / 10));
+	}
+}
+
 //task grap_homing();
 task color_calibrate();
 task main()
 {
-	perfect_line = gray_val + ((white_val - gray_val) / 2);
+	perfect_line = gray_val + ((white_val - gray_val) / 2); // udregner den perfekte linje én gang i starten
 	while (racedone == false) // Main loop til at køre når race endnu ikke er færdig
 	{
-		line_sensor_val = SensorValue(colorsens); // Værdien der læses fra farvesensoren. Skal næsten altid bruges, og er derfor i starten af vores loop.
-		startTask(color_calibrate);				  // sørger for, at farverne altid kan blive kalibreret
-		//Line tacking function, kan slås til/fra ved at sætte linetrack = true; / linetrack = false;
-		if (linetrack == true)
-		{
-			startTask(Linefollow_PID);
-		}
+		line_sensor_val = SensorValue(colorsense); // Værdien der læses fra farvesensoren. Skal næsten altid bruges, og er derfor i starten af vores loop.
+		
+		Linefollow_PID(true);
+
+		startTask(color_calibrate);
 
 		if (curr_task == 1)
 		{
@@ -114,9 +173,9 @@ task main()
 			}
 		}
 
-		if (curr_task == 6|| curr_task == 8)
+		if (curr_task == 6 || curr_task == 8)
 		{
-			if (task6 == true && curr_task == 6|| task8 == true && curr_task == 8) // Betingelser for udførelse af opgave 6 og 8
+			if (task6 == true && curr_task == 6 || task8 == true && curr_task == 8) // Betingelser for udførelse af opgave 6 og 8
 			{
 				// Indsæt opgave 6 og 8 loop her **********************
 			}
@@ -158,61 +217,7 @@ task main()
 		// Åben og luk grappen
 	}
 }
-task Linefollow_PID() // Funktionen der bruges til at følge linjen ved brug af PID-loop
-{
 
-	// PID konstanter
-	float Kp = 0.15;
-	float Ki = 0.000001;
-	float Kd = 0.028;
-
-	// variabler brugt til PID
-	float deltaErr = 0;
-	float turn = 0;
-	float errors = 0;
-	float error_sum = 0;
-	float prev_error = 0;
-	int multi;
-
-	// brugt til at ændre siden som robotten følger (ændrer fortegnet for fejlen)
-	if (dir == 1)
-	{
-		multi = 1;
-	}
-	else if (dir == 0)
-	{
-		multi = -1;
-	}
-
-	// Udregn størrelsen af fejlen : Proportionel
-	errors = multi * (line_sensor_val - perfect_line);
-
-	int color_diff = white_val - gray_val / 2;
-	if (errors > color_diff)
-	{
-		errors = color_diff;
-	}
-	else if (errors < -color_diff)
-	{
-		errors = -color_diff;
-	}
-
-	// Udregn sum af fejl : Integral
-	error_sum += errors;
-
-	// Udregn fejl delta : Differentiale
-	deltaErr = errors - prev_error;
-
-	// Game nuværende som forrige
-	prev_error = errors;
-
-	// Calculate PID
-	turn = (errors * Kp) + (error_sum * Ki) + (deltaErr * Kd);
-
-	// Set motor speed
-	setMotorSpeed(motorL, speed - ((turn * speed) / 10));
-	setMotorSpeed(motorR, speed + ((turn * speed) / 10));
-}
 /*
 task grap_homing()
 {
@@ -221,10 +226,10 @@ task grap_homing()
 task color_calibrate() // Funktion til kalibrering af farvesensor
 {
 	bool color_cal;
-	if (SensorValue(touchsens) == 1) // Hvis knappen er trykket ned i mere end 2 sekunder igangsættes farvekalibrering
+	if (SensorValue(calbutton) == 1) // Hvis knappen er trykket ned i mere end 2 sekunder igangsættes farvekalibrering
 	{
 		clearTimer(T2); // reset af timer2
-		while (SensorValue(touchsens) == 1)
+		while (SensorValue(calbutton) == 1)
 		{
 			setLEDColor(ledOrangeFlash);
 			if (time1[T2] > 2000) // hvis timer 2 tælller over 2000 ms
@@ -250,11 +255,11 @@ task color_calibrate() // Funktion til kalibrering af farvesensor
 
 		if (calstate == 1)
 		{
-			displayCenteredTextLine(2, "gray: ", SensorValue[colorsens]);
+			displayCenteredTextLine(2, "gray: ", SensorValue[colorsense]);
 			displayCenteredTextLine(3, "press button to calibrate");
-			if (SensorValue[touchsens] == 1)
+			if (SensorValue[calbutton] == 1)
 			{
-				gray_val = SensorValue[colorsens];
+				gray_val = SensorValue[colorsense];
 				eraseDisplay();
 				displayCenteredTextLine(2, "Gray calibrated");
 				setLEDColor(ledGreen);
@@ -267,11 +272,11 @@ task color_calibrate() // Funktion til kalibrering af farvesensor
 
 		if (calstate == 2)
 		{
-			displayCenteredTextLine(2, "white: ", SensorValue[colorsens]);
+			displayCenteredTextLine(2, "white: ", SensorValue[colorsense]);
 			displayCenteredTextLine(3, "press button to calibrate");
-			if (SensorValue[touchsens] == 1)
+			if (SensorValue[calbutton] == 1)
 			{
-				white_val = SensorValue[colorsens];
+				white_val = SensorValue[colorsense];
 				eraseDisplay();
 				displayCenteredTextLine(2, "White calibrated");
 				setLEDColor(ledGreen);
