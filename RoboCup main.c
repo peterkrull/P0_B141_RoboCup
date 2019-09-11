@@ -27,7 +27,7 @@ float perfect_line;		  // variabel til at holde information om den kalibrerede l
 float speed = 25;		  // Robottens hastighed i PID-loopet.
 
 //Variable til at dreje med
-float turn_degrees;		//variabel man ændrer for at sætte drejningsvinklen. Positiv = højre, negativ er venstre
+float turn_degrees; //variabel man ændrer for at sætte drejningsvinklen. Positiv = højre, negativ er venstre
 
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
@@ -104,10 +104,10 @@ task color_calibrate();
 task main()
 {
 	perfect_line = gray_val + ((white_val - gray_val) / 2); // udregner den perfekte linje én gang i starten
-	while (racedone == false) // Main loop til at køre når race endnu ikke er færdig
+	while (racedone == false)								// Main loop til at køre når race endnu ikke er færdig
 	{
 		line_sensor_val = SensorValue(colorsense); // Værdien der læses fra farvesensoren. Skal næsten altid bruges, og er derfor i starten af vores loop.
-		
+
 		Linefollow_PID(true);
 
 		startTask(color_calibrate);
@@ -151,21 +151,19 @@ task main()
 			}
 		}
 
-		if (task4 == true && black_counter==6 ) // Betingelser for udførelse af opgave 4
-			{
-				linetrack=false;
-				turn_degrees = -45;
-				dreje();
-	 			//et længde ud
-				turn_degrees = +45;
-				linetrack=true
-				kør frem
+		if (task4 == true && black_counter == 6) // Betingelser for udførelse af opgave 4
+		{
+			linetrack = false;
+			turn_degrees = -45;
+			dreje();
+			//et længde ud
+			turn_degrees = +45;
+			linetrack = true kør frem
 				black_counter++;
-				linetrack=false
-				drej til venstre
-				kør et stykke fram 
-				drej til højre, linetrack=true
-			else
+			linetrack = false drej til venstre
+				kør et stykke fram
+					drej til højre,
+			linetrack = true else
 			{
 				curr_task++;
 			}
@@ -189,6 +187,18 @@ task main()
 			if (task6 == true && curr_task == 6 || task8 == true && curr_task == 8) // Betingelser for udførelse af opgave 6 og 8
 			{
 				// Indsæt opgave 6 og 8 loop her **********************
+				Linefollow_PID(false)
+				dreje(80);
+				delay(200);
+				while (line_sensor_val > perfect_line)
+				{
+					setMotorSpeed(motorR, 12);
+					setMotorSpeed(motorL, 10);
+				}
+				delay(200);
+				dreje(-80)
+				Linefollow_PID(true)
+				curr_task++;
 			}
 			else
 			{
