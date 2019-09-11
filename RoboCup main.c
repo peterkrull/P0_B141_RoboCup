@@ -17,14 +17,13 @@
 #define task8 true  // Kør rundt om flasken (gentagelse af task6)
 #define task9 true  // Kør ind til midten af målstregen
 
-bool changetask = false;  // bruges til at definere hvornår robotten er imellem to opgaver
-bool racedone = false;	// Sættes automatisk til sandt når task9 er gennemført
-bool celebration = false; // Sættes til true sammen med racedone, og sættes til false for at afslutte hele programmet.
-int curr_task = 0;		  // For at teste specifikke udfordringer, skift dette tal
-int dir = 1;			  // sæt 1 for at køre på venstre side af grå streg, 0 for at køre på højre
-int black_counter;		  // Bruges til at holde styr på antallet af krydsede sorte linjer
-float perfect_line;		  // variabel til at holde information om den kalibrerede linje
-float speed = 20;		  // Robottens hastighed i PID-loopet.
+bool changetask = false; // bruges til at definere hvornår robotten er imellem to opgaver
+bool racedone = false;   // Sættes automatisk til sandt når task9 er gennemført
+int curr_task = 0;		 // For at teste specifikke udfordringer, skift dette tal
+int dir = 1;			 // sæt 1 for at køre på venstre side af grå streg, 0 for at køre på højre
+int black_counter;		 // Bruges til at holde styr på antallet af krydsede sorte linjer
+float perfect_line;		 // variabel til at holde information om den kalibrerede linje
+float speed = 20;		 // Robottens hastighed i PID-loopet.
 
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
@@ -135,6 +134,19 @@ void drive(float CM)
 }
 
 //
+// FUNKTION TIL AT TÆLLE SORTE STREGER
+//
+
+void black_line_counter()
+{
+	if (time1[T2] > 2000 && SensorValue(colorsense) < 12 && SensorValue(calbutton) == 0)
+	{
+		black_counter++;
+		clearTimer(T2);
+	}
+}
+
+//
 // FUNKTION TIL AT KALIBRERE GRÅ/HVID FARVE
 // Køres én gang i starten
 
@@ -220,7 +232,7 @@ task main()
 	while (racedone == false)								// Main loop til at køre når race endnu ikke er færdig
 	{
 		line_sensor_val = SensorValue(colorsense); // Værdien der læses fra farvesensoren. Skal næsten altid bruges, og er derfor i starten af vores loop.
-
+		black_line_counter();
 		if (curr_task == 0) // Det initielle stadie af robotten. Setup placeres her
 		{
 			color_calibrate();
@@ -378,13 +390,12 @@ task main()
 			{
 				curr_task++;
 			}
+			if (curr_task == 10)
+			{
+				// Afspil lyd
+				// Kør rundt i cirkler
+				// �?ben og luk grappen
+			}
 		}
-	}
-
-	while (racedone == true && celebration == true) // Når der ikke er flere opgaver efter den diste udførte, er robotten færdig
-	{
-		// Afspil lyd
-		// Kør rundt i cirkler
-		// �?ben og luk grappen
 	}
 }
