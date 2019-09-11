@@ -156,9 +156,21 @@ task main()
 
 		if (task4 == true && black_counter==6 ) // Betingelser for udførelse af opgave 4
 			{
-				linetrack=false;
+				float distanceR = getMotorEncoder(motorR);
+				float distanceL = getMotorEncoder(motorL);
+				float distance = (distanceR+distanceL)/2;
+				linetrack = false;
 				dreje(-45);
-	 			//et længde ud
+				resetMotorEncoder(motorL);
+				resetMotorEncoder(motorR);
+	 			while(distance < 204,1)
+				 {
+					 distanceR = getMotorEncoder(motorR) 
+					 distanceR = getMotorEncoder(motorL)
+					 distance = (distanceR+distanceL)/2
+					 motor[motorR]=10 //kører med farten 10
+					 motor[motorR]=10 //kører med farten 10	 
+				 }
 				dreje(+45);
 				black_counter++;
 				linetrack=true
