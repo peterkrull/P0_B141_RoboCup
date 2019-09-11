@@ -122,7 +122,7 @@ void dreje(float turn_degrees)
 // FUNKTION TIL AT KØRE ET ANTAL CM
 // Indsæt en værdi i move(xx); for at kære ligeud
 
-void move(float CM)
+void drive(float CM)
 {
 	float forwardT = (360 / (5.5 * PI)) * CM;
 	resetMotorEncoder(motorL);
@@ -335,7 +335,7 @@ task main()
 				// Indsæt opgave 6 og 8 loop her **********************
 				if (black_counter == 10 || black_counter == 12)
 				{
-					move(4);
+					drive(4);
 					Linefollow_PID(false);
 					dreje(80);
 					delay(200);
