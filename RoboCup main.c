@@ -26,6 +26,9 @@ int black_counter;		  // Bruges til at holde styr på antallet af krydsede sorte
 float perfect_line;		  // variabel til at holde information om den kalibrerede linje
 float speed = 25;		  // Robottens hastighed i PID-loopet.
 
+//Variable til at dreje med
+float turn_degrees;		//variabel man ændrer for at sætte drejningsvinklen. Positiv = højre, negativ er venstre
+
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
 
@@ -148,12 +151,20 @@ task main()
 			}
 		}
 
-		if (curr_task == 4)
-		{
-			if (task4 == true) // Betingelser for udførelse af opgave 4
+		if (task4 == true && black_counter==6 ) // Betingelser for udførelse af opgave 4
 			{
-				// Indsæt opgave 4 loop her **********************
-			}
+				linetrack=false;
+				turn_degrees = -45;
+				dreje();
+	 			//et længde ud
+				turn_degrees = +45;
+				linetrack=true
+				kør frem
+				black_counter++;
+				linetrack=false
+				drej til venstre
+				kør et stykke fram 
+				drej til højre, linetrack=true
 			else
 			{
 				curr_task++;
