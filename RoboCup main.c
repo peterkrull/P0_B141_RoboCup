@@ -176,7 +176,6 @@ task main()
 		}
 
 		if (curr_task == 4) // Betingelser for udførelse af opgave 4
-		//task4 == true && black_counter==6
 		{
 			if (task4 == true)
 			{
