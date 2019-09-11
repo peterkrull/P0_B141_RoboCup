@@ -117,11 +117,12 @@ task main()
 			if (task1 == true) // Betingelser for udførelse af opgave 1
 			{
 				// Indsæt opgave 1 loop her **********************
+				black_counter++;
 			}
 			else
 			{
 				curr_task++;
-				black_counter = black_counter++;
+				black_counter++;
 			}
 		}
 
@@ -130,11 +131,12 @@ task main()
 			if (task2 == true) // Betingelser for udførelse af opgave 2
 			{
 				// Indsæt opgave 2 loop her **********************
+				black_counter++;
 			}
 			else
 			{
 				curr_task++;
-				black_counter = black_counter++;
+				black_counter++;
 			}
 		}
 
@@ -143,31 +145,27 @@ task main()
 			if (task3 == true) // Betingelser for udførelse af opgave 3
 			{
 				// Indsæt opgave 3 loop her **********************
+				black_counter++;
 			}
 			else
 			{
 				curr_task++;
-				black_counter = black_counter++;
+				black_counter++;
 			}
 		}
 
 		if (task4 == true && black_counter==6 ) // Betingelser for udførelse af opgave 4
 			{
 				linetrack=false;
-				turn_degrees = -45;
-				dreje();
+				dreje(-45);
 	 			//et længde ud
-				turn_degrees = +45;
-				linetrack=true
-				kør frem
+				dreje(+45);
 				black_counter++;
-				linetrack=false
-				drej til venstre
-				kør et stykke fram 
-				drej til højre, linetrack=true
+				linetrack=true
 			else
 			{
 				curr_task++;
+				black_counter++;
 			}
 		}
 
@@ -176,11 +174,12 @@ task main()
 			if (task5 == true) // Betingelser for udførelse af opgave 5
 			{
 				// Indsæt opgave 5 loop her **********************
+				black_counter++;
 			}
 			else
 			{
 				curr_task++;
-				black_counter = black_counter++;
+				black_counter++;
 			}
 		}
 
@@ -189,10 +188,13 @@ task main()
 			if (task6 == true && curr_task == 6 || task8 == true && curr_task == 8) // Betingelser for udførelse af opgave 6 og 8
 			{
 				// Indsæt opgave 6 og 8 loop her **********************
+				black_counter++;
 			}
 			else
 			{
 				curr_task++;
+				black_counter++;
+				
 			}
 		}
 
@@ -201,10 +203,12 @@ task main()
 			if (task7 == true) // Betingelser for udførelse af opgave 7
 			{
 				// Indsæt opgave 7 loop her **********************
+				black_counter++;
 			}
 			else
 			{
 				curr_task++;
+				black_counter++;
 			}
 		}
 
@@ -213,10 +217,12 @@ task main()
 			if (task9 == true) // Betingelser for udførelse af opgave 9
 			{
 				// Indsæt opgave 9 loop her **********************
+				black_counter++;
 			}
 			else
 			{
 				curr_task++;
+				black_counter++;
 			}
 		}
 	}
@@ -233,6 +239,22 @@ task main()
 task grap_homing()
 {
 }*/
+
+
+task dreje(float turn_degrees)
+{ //turn_degrees er lig antal grader bilen drejer. Positiv = højre, negativ = venstre
+	float hjul_om = 6.5;					//hjulets omkreds i cm
+	float sporvidde = 12.4;				//sporvidde på bilen
+	float correction = 1;					//float til at lave små corrections på mængden bilen drejer
+	float calc_turn = correction*(sporvidde*(turn_degrees/hjul_om)); //udregning af antal grader motoren skal dreje
+	resetMotorEncoder(motorL);
+    resetMotorEncoder(motorR);
+    setMotorTarget(motorL, calc_turn, 10);
+	setMotorTarget(motorR, -calc_turn, 10);
+  while(abs(getMotorEncoder(motorL))<(abs(calc_turn)-4))
+  { //de minus 4 er en buffer in case motoren ikke rammer target præcis
+  } //while loopet eksisterer for at sikre at robotten er helt drejet før den udfører ny kode
+}
 
 task color_calibrate() // Funktion til kalibrering af farvesensor
 {
