@@ -26,9 +26,6 @@ int black_counter;		  // Bruges til at holde styr på antallet af krydsede sorte
 float perfect_line;		  // variabel til at holde information om den kalibrerede linje
 float speed = 25;		  // Robottens hastighed i PID-loopet.
 
-//Variable til at dreje med
-float turn_degrees; //variabel man ændrer for at sætte drejningsvinklen. Positiv = højre, negativ er venstre
-
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
 
@@ -69,7 +66,7 @@ void Linefollow_PID(bool enable_tracking) // Funktionen der bruges til at følge
 		}
 
 		// Udregn størrelsen af fejlen : Proportionel
-		errors = multi * (line_sensor_val - perfect_line);
+		errors = multi * (SensorValue(colorsense) - perfect_line);
 
 		color_diff = (white_val - gray_val) / 2; // Udregner størrelsen af farveforskellen mellem hvid, error og grå
 		if (errors > color_diff)				 // Hvis fejlen er større end den målte hvide farve
@@ -99,8 +96,26 @@ void Linefollow_PID(bool enable_tracking) // Funktionen der bruges til at følge
 	}
 }
 
-//task grap_homing();
-task color_calibrate();
+//
+// FUNKTION TIL AT DREJE X ANTAL GRADER
+// Indsæt en værdi i dreje(xx); for at dreje det antal grader.
+
+void dreje(float turn_degrees)
+{																		   //turn_degrees er lig antal grader bilen drejer. Positiv = højre, negativ = venstre
+	float hjul_om = 6.5;												   //hjulets omkreds i cm
+	float sporvidde = 12.4;												   //sporvidde på bilen
+	float correction = 1;												   //float til at lave små corrections på mængden bilen drejer
+	float calc_turn = correction * (sporvidde * (turn_degrees / hjul_om)); //udregning af antal grader motoren skal dreje
+	resetMotorEncoder(motorL);
+	resetMotorEncoder(motorR);
+	setMotorTarget(motorL, calc_turn, 10);
+	setMotorTarget(motorR, -calc_turn, 10);
+	while (abs(getMotorEncoder(motorL)) < (abs(calc_turn) - 4))
+	{ //de minus 4 er en buffer in case motoren ikke rammer target præcis
+	} //while loopet eksisterer for at sikre at robotten er helt drejet før den udfører ny kode
+}
+
+task color_calibrate(); 
 task main()
 {
 	perfect_line = gray_val + ((white_val - gray_val) / 2); // udregner den perfekte linje én gang i starten
@@ -108,16 +123,20 @@ task main()
 	{
 		line_sensor_val = SensorValue(colorsense); // Værdien der læses fra farvesensoren. Skal næsten altid bruges, og er derfor i starten af vores loop.
 
-		Linefollow_PID(true);
-
 		startTask(color_calibrate);
+
+		if (curr_task == 0) // Det initielle stadie af robotten. Setup placeres her
+		{
+			Linefollow_PID(true);
+		}
 
 		if (curr_task == 1)
 		{
 			if (task1 == true) // Betingelser for udførelse af opgave 1
 			{
+				if (black_counter == 1){}
+				if (black_counter == 2){}
 				// Indsæt opgave 1 loop her **********************
-				black_counter++;
 			}
 			else
 			{
@@ -130,8 +149,9 @@ task main()
 		{
 			if (task2 == true) // Betingelser for udførelse af opgave 2
 			{
+				if (black_counter == 3){}
+				if (black_counter == 4){}
 				// Indsæt opgave 2 loop her **********************
-				black_counter++;
 			}
 			else
 			{
@@ -144,8 +164,9 @@ task main()
 		{
 			if (task3 == true) // Betingelser for udførelse af opgave 3
 			{
+				if (black_counter == 5){}
+				if (black_counter == 6){}
 				// Indsæt opgave 3 loop her **********************
-				black_counter++;
 			}
 			else
 			{
@@ -154,18 +175,34 @@ task main()
 			}
 		}
 
-		if (task4 == true && black_counter==6 ) // Betingelser for udførelse af opgave 4
+		if (curr_task == 4) // Betingelser for udførelse af opgave 4
+		//task4 == true && black_counter==6
+		{
+			if (task4 == true)
 			{
-				linetrack=false;
+				if (black_counter == 7){
+				float distanceR = getMotorEncoder(motorR);
+				float distanceL = getMotorEncoder(motorL);
+				float distance = (distanceR+distanceL)/2;
+				Linefollow_PID(false);
 				dreje(-45);
-	 			//et længde ud
+				resetMotorEncoder(motorL);
+				resetMotorEncoder(motorR);
+	 			while(distance < 204.1)
+				 {
+					 distanceR = getMotorEncoder(motorR) ;
+					 distanceR = getMotorEncoder(motorL);
+					 distance = (distanceR+distanceL)/2;
+					 motor[motorR]=10; //kører med farten 10
+					 motor[motorR]=10; //kører med farten 10	 
+				 }
 				dreje(+45);
-				black_counter++;
-				linetrack=true
+				Linefollow_PID(true);
+				}
+			}
 			else
 			{
 				curr_task++;
-				black_counter++;
 			}
 		}
 
@@ -174,7 +211,6 @@ task main()
 			if (task5 == true) // Betingelser for udførelse af opgave 5
 			{
 				// Indsæt opgave 5 loop her **********************
-				black_counter++;
 			}
 			else
 			{
@@ -188,7 +224,7 @@ task main()
 			if (task6 == true && curr_task == 6 || task8 == true && curr_task == 8) // Betingelser for udførelse af opgave 6 og 8
 			{
 				// Indsæt opgave 6 og 8 loop her **********************
-				Linefollow_PID(false)
+				Linefollow_PID(false);
 				dreje(80);
 				delay(200);
 				while (line_sensor_val > perfect_line)
@@ -197,15 +233,13 @@ task main()
 					setMotorSpeed(motorL, 10);
 				}
 				delay(200);
-				dreje(-80)
-				Linefollow_PID(true)
+				dreje(-80);
+				Linefollow_PID(true);
 				curr_task++;
 			}
 			else
 			{
 				curr_task++;
-				black_counter++;
-				
 			}
 		}
 
@@ -214,12 +248,10 @@ task main()
 			if (task7 == true) // Betingelser for udførelse af opgave 7
 			{
 				// Indsæt opgave 7 loop her **********************
-				black_counter++;
 			}
 			else
 			{
 				curr_task++;
-				black_counter++;
 			}
 		}
 
@@ -228,12 +260,10 @@ task main()
 			if (task9 == true) // Betingelser for udførelse af opgave 9
 			{
 				// Indsæt opgave 9 loop her **********************
-				black_counter++;
 			}
 			else
 			{
 				curr_task++;
-				black_counter++;
 			}
 		}
 	}
@@ -250,22 +280,6 @@ task main()
 task grap_homing()
 {
 }*/
-
-
-task dreje(float turn_degrees)
-{ //turn_degrees er lig antal grader bilen drejer. Positiv = højre, negativ = venstre
-	float hjul_om = 6.5;					//hjulets omkreds i cm
-	float sporvidde = 12.4;				//sporvidde på bilen
-	float correction = 1;					//float til at lave små corrections på mængden bilen drejer
-	float calc_turn = correction*(sporvidde*(turn_degrees/hjul_om)); //udregning af antal grader motoren skal dreje
-	resetMotorEncoder(motorL);
-    resetMotorEncoder(motorR);
-    setMotorTarget(motorL, calc_turn, 10);
-	setMotorTarget(motorR, -calc_turn, 10);
-  while(abs(getMotorEncoder(motorL))<(abs(calc_turn)-4))
-  { //de minus 4 er en buffer in case motoren ikke rammer target præcis
-  } //while loopet eksisterer for at sikre at robotten er helt drejet før den udfører ny kode
-}
 
 task color_calibrate() // Funktion til kalibrering af farvesensor
 {
