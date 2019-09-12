@@ -17,14 +17,14 @@
 #define task8 true  // Kør rundt om flasken (gentagelse af task6)
 #define task9 true  // Kør ind til midten af målstregen
 
-bool changetask = false; // bruges til at definere hvornår robotten er imellem to opgaver
-bool racedone = false;   // Sættes automatisk til sandt når task9 er gennemført
-bool count_blacks = true;// Bruges til at tænde og slukke for tælleren af sorte linjer
-int curr_task = 0;		 // For at teste specifikke udfordringer, skift dette tal
-int dir = 1;			 // sæt 1 for at køre på venstre side af grå streg, 0 for at køre på højre
-int black_counter;		 // Bruges til at holde styr på antallet af krydsede sorte linjer
-float perfect_line;		 // variabel til at holde information om den kalibrerede linje
-float speed = 20;		 // Robottens hastighed i PID-loopet.
+bool changetask = false;  // bruges til at definere hvornår robotten er imellem to opgaver
+bool racedone = false;	// Sættes automatisk til sandt når task9 er gennemført
+bool count_blacks = true; // Bruges til at tænde og slukke for tælleren af sorte linjer
+int curr_task = 6;		  // For at teste specifikke udfordringer, skift dette tal
+int dir = 1;			  // sæt 1 for at køre på venstre side af grå streg, 0 for at køre på højre
+int black_counter = 9;	// Bruges til at holde styr på antallet af krydsede sorte linjer
+float perfect_line;		  // variabel til at holde information om den kalibrerede linje
+float speed = 20;		  // Robottens hastighed i PID-loopet.
 
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
@@ -113,9 +113,10 @@ void dreje(float turn_degrees)
 	resetMotorEncoder(motorR);
 	setMotorTarget(motorL, calc_turn, 10);
 	setMotorTarget(motorR, -calc_turn, 10);
-	while (abs(getMotorEncoder(motorL)) < (abs(calc_turn) - 4))
-	{ //de minus 4 er en buffer in case motoren ikke rammer target præcis
-	} //while loopet eksisterer for at sikre at robotten er helt drejet før den udfører ny kode
+	while (abs(getMotorEncoder(motorL)) < (abs(calc_turn) - 6))
+	{			//de minus 4 er en buffer in case motoren ikke rammer target præcis
+	}			//while loopet eksisterer for at sikre at robotten er helt drejet før den udfører ny kode
+	sleep(250); // Skal kigges på igen senere
 }
 
 //
@@ -129,9 +130,10 @@ void drive(float CM)
 	resetMotorEncoder(motorR);
 	setMotorTarget(motorL, forwardT, 25);
 	setMotorTarget(motorR, forwardT, 25);
-	while (abs(getMotorEncoder(motorL)) < (abs(forwardT) - 4))
-	{ //de minus 4 er en buffer in case motoren ikke rammer target pr�cis
-	} //while loopet eksisterer for at sikre at robotten er k�rt f�rdig f�r den udf�rer ny kode
+	while (abs(getMotorEncoder(motorL)) < (abs(forwardT) - 6))
+	{			//de minus 4 er en buffer in case motoren ikke rammer target pr�cis
+	}			//while loopet eksisterer for at sikre at robotten er k�rt f�rdig f�r den udf�rer ny kode
+	sleep(250); // Skal kigges på igen senere
 }
 
 //
@@ -140,7 +142,7 @@ void drive(float CM)
 
 void black_line_counter()
 {
-	if (time1[T2] > 2000 && SensorValue(colorsense) < 12 && SensorValue(calbutton) == 0 && count_blacks == true)
+	if (time1[T2] > 2000 && SensorValue(colorsense) < 20 && SensorValue(calbutton) == 0 && count_blacks == true)
 	{
 		black_counter++;
 		clearTimer(T2);
@@ -301,6 +303,7 @@ task main()
 		{
 			if (task4 == true)
 			{
+
 				if (black_counter == 7)
 				{
 					float distanceR = getMotorEncoder(motorR);
@@ -345,20 +348,23 @@ task main()
 		{
 			if (task6 == true && curr_task == 6 || task8 == true && curr_task == 8) // Betingelser for udførelse af opgave 6 og 8
 			{
-				// Indsæt opgave 6 og 8 loop her **********************
+				if (black_counter != 10 || black_counter != 12)
+				{
+					Linefollow_PID(true);
+				}
 				if (black_counter == 10 || black_counter == 12)
 				{
-					drive(4);
+					count_blacks = false;
 					Linefollow_PID(false);
-					dreje(80);
-					delay(200);
-					while (line_sensor_val > perfect_line)
+					drive(4);
+					dreje(45);
+					drive(15);
+					while (SensorValue(colorsense) > perfect_line)
 					{
-						setMotorSpeed(motorR, 12);
-						setMotorSpeed(motorL, 10);
+						setMotorSpeed(motorR, 28);
+						setMotorSpeed(motorL, 20);
 					}
-					delay(200);
-					dreje(-80);
+					dreje(45);
 					Linefollow_PID(true);
 					curr_task++;
 				}
@@ -373,6 +379,7 @@ task main()
 		{
 			if (task7 == true) // Betingelser for udførelse af opgave 7
 			{
+				Linefollow_PID(true);
 				// Indsæt opgave 7 loop her **********************
 			}
 			else
