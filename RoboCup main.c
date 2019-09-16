@@ -20,11 +20,12 @@
 bool changetask = false;  // bruges til at definere hvornår robotten er imellem to opgaver
 bool racedone = false;	// Sættes automatisk til sandt når task9 er gennemført
 bool count_blacks = true; // Bruges til at tænde og slukke for tælleren af sorte linjer
-int curr_task = 6;		  // For at teste specifikke udfordringer, skift dette tal
+int curr_task = 7;		  // For at teste specifikke udfordringer, skift dette tal
 int dir = 1;			  // sæt 1 for at køre på venstre side af grå streg, 0 for at køre på højre
-int black_counter = 9;	// Bruges til at holde styr på antallet af krydsede sorte linjer
+int black_counter = 0;	// Bruges til at holde styr på antallet af krydsede sorte linjer
 float perfect_line;		  // variabel til at holde information om den kalibrerede linje
-float speed = 20;		  // Robottens hastighed i PID-loopet.
+float speed = 30;		  // Robottens hastighed i PID-loopet.
+!=
 
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
@@ -42,14 +43,14 @@ void Linefollow_PID(bool enable_tracking) // Funktionen der bruges til at følge
 	if (enable_tracking == true)
 	{
 		// PID konstanter
-		float Kp = 0.15;
-		float Ki = 0.000001;
-		float Kd = 0.028;
+		float Kp = 0.2;
+		float Ki = 0.00001;
+		float Kd = 0.035;
 		/*
 		float Kp = 0.1;
 		float Ki = 0.000001;
 		float Kd = 0.02;
-*/
+		*/
 		// variabler brugt til PID
 		float deltaErr = 0;
 		float turn = 0;
@@ -94,8 +95,8 @@ void Linefollow_PID(bool enable_tracking) // Funktionen der bruges til at følge
 		turn = (errors * Kp) + (error_sum * Ki) + (deltaErr * Kd);
 
 		// Set motor speed
-		setMotorSpeed(motorL, speed - ((turn * speed) / 10));
-		setMotorSpeed(motorR, speed + ((turn * speed) / 10));
+		setMotorSpeed(motorL, -speed - ((turn * speed) / 10));
+		setMotorSpeed(motorR, -speed + ((turn * speed) / 10));
 	}
 }
 
@@ -120,7 +121,7 @@ void dreje(float turn_degrees)
 }
 
 //
-// FUNKTION TIL AT KØRE ET ANTAL CM
+// FUNKTION TIL AT K�?RE ET ANTAL CM
 // Indsæt en værdi i move(xx); for at kære ligeud
 
 void drive(float CM)
@@ -137,12 +138,12 @@ void drive(float CM)
 }
 
 //
-// FUNKTION TIL AT TÆLLE SORTE STREGER
+// FUNKTION TIL AT T�?LLE SORTE STREGER
 //
 
 void black_line_counter()
 {
-	if (time1[T2] > 2000 && SensorValue(colorsense) < 20 && SensorValue(calbutton) == 0 && count_blacks == true)
+	if (time1[T2] > 3000 && SensorValue(colorsense) < 20 && SensorValue(calbutton) == 0 && count_blacks == true)
 	{
 		black_counter++;
 		clearTimer(T2);
@@ -150,28 +151,32 @@ void black_line_counter()
 }
 
 //
-// FUNKTION TIL AT KALIBRERE GRÅ/HVID FARVE
+// FUNKTION TIL AT KALIBRERE GR�?/HVID FARVE
 // Køres én gang i starten
 
 void color_calibrate() // Funktion til kalibrering af farvesensor
 {
-	bool color_cal;
-	if (SensorValue(calbutton) == 1) // Hvis knappen er trykket ned i mere end 2 sekunder igangsættes farvekalibrering
+	bool color_cal = false;
+	while (color_cal == false)
 	{
-		clearTimer(T2); // reset af timer2
-		while (SensorValue(calbutton) == 1 && color_cal == false)
+		clearTimer(T3);
+		setLEDColor(ledGreen);			 // reset af timer3
+		if (SensorValue(calbutton) == 1) // Hvis knappen er trykket ned i mere end 2 sekunder igangsættes farvekalibrering
 		{
-			setLEDColor(ledOrangeFlash);
-			if (time1[T2] > 2000) // hvis timer 2 tælller over 2000 ms
+			while (SensorValue(calbutton) == 1)
 			{
-				color_cal = true; // igangsættes kalibrering
-				setLEDColor(ledGreenFlash);
+				setLEDColor(ledOrange);
+				if (time1[T3] > 2000) // hvis timer 2 tælller over 2000 ms
+				{
+					color_cal = true; // igangsættes kalibrering
+					setLEDColor(ledGreenFlash);
+				}
 			}
 		}
 	}
-	int calstate = 0;
 	while (color_cal == true) // Når kalibrering er startet,
 	{
+		int calstate = 0;
 		if (calstate == 0)
 		{
 			displayCenteredBigTextLine(2, "Calibrating");
@@ -179,9 +184,9 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 			sleep(2000);
 			calstate++;
 		}
-		if (calstate == 1)
+		else if (calstate == 1)
 		{
-			displayCenteredBigTextLine(2, "gray: ", "%f", SensorValue[colorsense]);
+			displayCenteredBigTextLine(2, "gray: ", "%4f", SensorValue[colorsense]);
 			displayCenteredTextLine(4, "");
 			displayCenteredTextLine(5, "press button to calibrate");
 			if (SensorValue[calbutton] == 1)
@@ -196,9 +201,9 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 				calstate++;
 			}
 		}
-		if (calstate == 2)
+		else if (calstate == 2)
 		{
-			displayCenteredBigTextLine(2, "white: ", "%f", SensorValue[colorsense]);
+			displayCenteredBigTextLine(2, "white: ", "%4f", SensorValue[colorsense]);
 			displayCenteredTextLine(4, "");
 			displayCenteredTextLine(5, "press button to calibrate");
 			if (SensorValue[calbutton] == 1)
@@ -213,7 +218,7 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 				calstate++;
 			}
 		}
-		if (calstate == 3)
+		else if (calstate == 3)
 		{
 			perfect_line = gray_val + ((white_val - gray_val) / 2);
 			displayCenteredBigTextLine(2, "Calibration");
@@ -238,21 +243,45 @@ task main()
 		black_line_counter();
 		if (curr_task == 0) // Det initielle stadie af robotten. Setup placeres her
 		{
-			color_calibrate();
+			color_calibrate(); // farvekalibrering kører i starten
 		}
 
 		if (curr_task == 1)
 		{
 			if (task1 == true) // Betingelser for udførelse af opgave 1
 			{
-				Linefollow_PID(true);
+				if (black_counter == 0)
+				{
+					speed = 20;
+					Linefollow_PID(true);
+				}
 				if (black_counter == 1)
 				{
+					for (int i; i < 1; i++)
+					{
+						count_blacks = false;
+						Linefollow_PID(false);
+						dreje(+45);
+						drive(30);
+						dreje(-45);
+						count_blacks = true;
+					}
+
+					Linefollow_PID(true);
 				}
 				if (black_counter == 2)
 				{
+					for (int i; i < 1; i++)
+					{
+						count_blacks = false;
+						Linefollow_PID(false);
+						dreje(-45);
+						drive(30);
+						dreje(+45);
+						count_blacks = true;
+					}
+					curr_task++;
 				}
-				// Indsæt opgave 1 loop her **********************
 			}
 			else
 			{
@@ -263,8 +292,13 @@ task main()
 
 		if (curr_task == 2)
 		{
-			if (task2 == true) // Betingelser for udførelse af opgave 2
+
+			if (task2 == true) // Betingelser for udførelse af opgave 2 - Khadar
 			{
+				if (black_counter == 2)
+				{
+					Linefollow_PID(true);
+				}
 				if (black_counter == 3)
 				{
 				}
@@ -303,31 +337,26 @@ task main()
 		{
 			if (task4 == true)
 			{
-
-				if (black_counter == 7)
+				if (black_counter == 6)
 				{
-					float distanceR = getMotorEncoder(motorR);
-					float distanceL = getMotorEncoder(motorL);
-					float distance = (distanceR + distanceL) / 2;
-					Linefollow_PID(false);
-					dreje(-45);
-					resetMotorEncoder(motorL);
-					resetMotorEncoder(motorR);
-					while (distance < 204.1)
-					{
-						distanceR = getMotorEncoder(motorR);
-						distanceR = getMotorEncoder(motorL);
-						distance = (distanceR + distanceL) / 2;
-						motor[motorR] = 10; //kører med farten 10
-						motor[motorR] = 10; //kører med farten 10
-					}
-					dreje(+45);
 					Linefollow_PID(true);
 				}
-			}
-			else
-			{
-				curr_task++;
+				else if (black_counter == 7)
+				{
+					dreje(-45);
+					drive(40);
+					while (SensorValue(colorsense) > perfect_line)
+					{
+						setMotorSpeed(motorR, 20);
+						setMotorSpeed(motorL, 20);
+					}
+					dreje(+45);
+					curr_task++;
+				}
+				else
+				{
+					curr_task++;
+				}
 			}
 		}
 
@@ -335,7 +364,18 @@ task main()
 		{
 			if (task5 == true) // Betingelser for udførelse af opgave 5
 			{
-				// Indsæt opgave 5 loop her **********************
+				if (black_counter == 7)
+				{
+					Linefollow_PID(true);
+				}
+				else if (black_counter == 8)
+				{
+					// Gør noget, når den sorte linje er opfanget
+				}
+				else if (black_counter == 9)
+				{
+					// Gør noget, når den ANDEN sorte linje er opfanget
+				}
 			}
 			else
 			{
@@ -348,7 +388,7 @@ task main()
 		{
 			if (task6 == true && curr_task == 6 || task8 == true && curr_task == 8) // Betingelser for udførelse af opgave 6 og 8
 			{
-				if (black_counter != 10 || black_counter != 12)
+				if (black_counter == 9 || black_counter == 11)
 				{
 					Linefollow_PID(true);
 				}
@@ -377,15 +417,15 @@ task main()
 
 		if (curr_task == 7)
 		{
-			if (task7 == true) // Betingelser for udførelse af opgave 7
+			while (task7 == true) // Betingelser for udførelse af opgave 7
 			{
 				Linefollow_PID(true);
 				// Indsæt opgave 7 loop her **********************
 			}
-			else
+			/*else
 			{
 				curr_task++;
-			}
+			}*/
 		}
 
 		if (curr_task == 9)
