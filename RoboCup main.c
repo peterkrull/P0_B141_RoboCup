@@ -17,20 +17,15 @@
 #define task8 true  // Kør rundt om flasken (gentagelse af task6)
 #define task9 true  // Kør ind til midten af målstregen
 
-bool changetask = false;   // bruges til at definere hvornår robotten er imellem to opgaver
 bool racedone = false;	 // Sættes automatisk til sandt når task9 er gennemført
 bool count_blacks = true;  // Bruges til at tænde og slukke for tælleren af sorte linjer
-int curr_task = 6;		   // For at teste specifikke udfordringer, skift dette tal
+int curr_task = 0;		   // For at teste specifikke udfordringer, skift dette tal
 int dir = 0;			   // sæt 1 for at køre på venstre side af grå streg, 0 for at køre på højre
-int black_counter = 9;	 // Bruges til at holde styr på antallet af krydsede sorte linjer
+int black_counter = 0;	 // Bruges til at holde styr på antallet af krydsede sorte linjer
 float perfect_line;		   // variabel til at holde information om den kalibrerede linje
-float speed = 30;		   // Robottens hastighed i PID-loopet.
-const float stdspeed = 20; // Standard
 int sens;
 
-// Variabel til at holde sensor aflæsning
-int line_sensor_val;
-
+// PID Værdier
 float white_val = 64; // Variabel til værdien af den hvide del af banen
 float gray_val = 37;  // Variabel til værdien af den grå del af banen
 float black_val = 5;  // Variabel til værdien af den sorte del af banen
@@ -39,7 +34,7 @@ float black_val = 5;  // Variabel til værdien af den sorte del af banen
 // LINEFOLLOW PID FUNKTION
 //
 
-void Linefollow_PID(bool enable_tracking) // Funktionen der bruges til at følge linjen ved brug af PID-loop
+void Linefollow_PID(bool enable_tracking, float speed = 20) // Funktionen der bruges til at følge linjen ved brug af PID-loop
 {
 	if (enable_tracking == true)
 	{
@@ -105,21 +100,21 @@ void Linefollow_PID(bool enable_tracking) // Funktionen der bruges til at følge
 // FUNKTION TIL AT køre en distance med PID tændt
 //
 
-void PID_distance(float cm)
+void PID_distance(float cm, float speed = 20)
 {
 	float maal = (360 / (5.5 * PI)) * cm;	  //Formel for at beregne hvor mange "ticks" den skal k?re for en hvis l?ngde(der er indsat 10cm)
-	resetMotorEncoder(motorL); //resetter venstre motors encoder
-	resetMotorEncoder(motorR); //resetter højre motors encoder
+	resetMotorEncoder(motorL);				   //resetter venstre motors encoder
+	resetMotorEncoder(motorR);				   //resetter højre motors encoder
 	float distanceR = getMotorEncoder(motorR); //giver værdien for h?jre og venste's encoder
 	float distanceL = getMotorEncoder(motorL);
 	float distance = (distanceR + distanceL) / 2; //gennemsnit for de to tick v?rdier
-	
+
 	while (distance < maal)
 	{ // while loop der stoppe n?r robotten har k?rt en x l?ngde
 		distanceR = -getMotorEncoder(motorR);
 		distanceL = -getMotorEncoder(motorL);
 		distance = (distanceR + distanceL) / 2;
-		Linefollow_PID(true); //linefollow
+		Linefollow_PID(true, speed); //linefollow
 	}
 	Linefollow_PID(false);
 	delay(200);
@@ -149,7 +144,7 @@ void dreje(float turn_degrees)
 // FUNKTION TIL AT K�?RE ET ANTAL CM
 // Indsæt to værdier i drive(x, y); for at køre ligeud for en afstand (x) ved en hastighed (y)
 
-void drive(float CM, int speedX = stdspeed)
+void drive(float CM, int speedX = 20)
 {
 	float forwardT = (360 / (5.5 * PI)) * CM; //udregning af rotation i grader motoren skal køre
 	resetMotorEncoder(motorL);				  //5,5 er hjulstørrelsen
@@ -222,18 +217,23 @@ void black_line_counter()
 //
 
 void klo_cal(int klo_pos = 1) //kalibrering af kloen (bruger timer4)
-{int kalibration = 0;
+{
+	int kalibration = 0;
 	clearTimer(timer4);
-	while(kalibration == 0){
-		while(time1[timer4] < 500){
-			setMotorSpeed(klomotor, 20);//for at sikre switchen ikke er trykket fra starten
+	while (kalibration == 0)
+	{
+		while (time1[timer4] < 500)
+		{
+			setMotorSpeed(klomotor, 20); //for at sikre switchen ikke er trykket fra starten
 		}
 		setMotorSpeed(klomotor, -70);
-		if (getTouchValue(homesense)== 1){ //inds�t switchnavn p� "a"'s plads
+		if (getTouchValue(homesense) == 1)
+		{ //inds�t switchnavn p� "a"'s plads
 			setMotorSpeed(klomotor, 0);
 			resetMotorEncoder(klomotor);
 			setMotorTarget(klomotor, klo_pos, 100);
-			while(getMotorEncoder(klomotor)< klo_pos-4){
+			while (getMotorEncoder(klomotor) < klo_pos - 4)
+			{
 			}
 			kalibration = 1;
 		}
@@ -337,7 +337,6 @@ task main()
 	perfect_line = gray_val + ((white_val - gray_val) / 2); // udregner den perfekte linje én gang i starten
 	while (racedone == false)								// Main loop til at køre når race endnu ikke er færdig
 	{
-		line_sensor_val = SensorValue(colorsense); // Værdien der læses fra farvesensoren. Skal næsten altid bruges, og er derfor i starten af vores loop.
 		black_line_counter();
 		if (curr_task == 0) // Det initielle stadie af robotten. Setup placeres her
 		{
@@ -350,8 +349,7 @@ task main()
 			{
 				if (black_counter == 0)
 				{
-					speed = 20;
-					Linefollow_PID(true);
+					Linefollow_PID(true, 30);
 				}
 				if (black_counter == 1)
 				{
@@ -360,7 +358,7 @@ task main()
 						count_blacks = false;
 						Linefollow_PID(false);
 						dreje(+45);
-						drive(30);
+						drive(40);
 						dreje(-45);
 						count_blacks = true;
 					}
@@ -393,6 +391,10 @@ task main()
 
 			if (task2 == true) // Betingelser for udførelse af opgave 2 - Khadar
 			{
+				if (black_counter < 2)
+				{
+					black_counter = 2;
+				}
 				if (black_counter == 2)
 				{
 					Linefollow_PID(true);
@@ -416,6 +418,10 @@ task main()
 		{
 			if (task3 == true) // Betingelser for udførelse af opgave 3
 			{
+				if (black_counter < 4)
+				{
+					black_counter = 4;
+				}
 				if (black_counter == 4)
 				{
 					Linefollow_PID(true);
@@ -433,7 +439,6 @@ task main()
 				{
 					for (int i = 0; i < 1; i++)
 					{
-						playTone(1200, 200);
 						Linefollow_PID(false);
 						drive(40, 60);
 						delay(500);
@@ -459,6 +464,10 @@ task main()
 
 		if (curr_task == 4) // Betingelser for udførelse af opgave 4
 		{
+			if (black_counter < 6)
+			{
+				black_counter = 6;
+			}
 			if (task4 == true)
 			{
 				if (black_counter == 6)
@@ -488,6 +497,10 @@ task main()
 		{
 			if (task5 == true) // Betingelser for udførelse af opgave 5
 			{
+				if (black_counter < 7)
+				{
+					black_counter = 7;
+				}
 				if (black_counter == 7)
 				{
 					Linefollow_PID(true);
@@ -512,6 +525,15 @@ task main()
 		{
 			if (task6 == true && curr_task == 6 || task8 == true && curr_task == 8) // Betingelser for udførelse af opgave 6 og 8
 			{
+				if (curr_task == 6 && black_counter < 9)
+				{
+					black_counter = 9;
+				}
+				else if (curr_task == 8 && black_counter < 11)
+				{
+					black_counter = 11;
+				}
+
 				if (black_counter == 9 || black_counter == 11)
 				{
 					Linefollow_PID(true);
@@ -528,8 +550,14 @@ task main()
 						setMotorSpeed(motorR, -28);
 						setMotorSpeed(motorL, -20);
 					}
-					if (curr_task == 6){dreje(40);}
-					if (curr_task == 8){dreje(30);}
+					if (curr_task == 6)
+					{
+						dreje(40);
+					}
+					if (curr_task == 8)
+					{
+						dreje(30);
+					}
 
 					count_blacks = true;
 					Linefollow_PID(true);
@@ -544,16 +572,19 @@ task main()
 
 		if (curr_task == 7)
 		{
-			
+
 			if (task7 == true) // Betingelser for udførelse af opgave 7
 			{
-
+				if (black_counter < 10)
+				{
+					black_counter = 10;
+				}
 				if (black_counter == 10)
 				{
 					Linefollow_PID(true);
 				}
 				if (black_counter == 11)
-				{	
+				{
 					Linefollow_PID(false);
 					for (int i; i < 1; i++)
 					{
@@ -581,6 +612,10 @@ task main()
 		{
 			if (task9 == true) // Betingelser for udførelse af opgave 9
 			{
+				if (black_counter < 12)
+				{
+					black_counter = 12;
+				}
 				if (black_counter == 12)
 				{
 					Linefollow_PID(true);
