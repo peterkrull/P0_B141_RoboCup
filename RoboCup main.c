@@ -20,11 +20,12 @@
 bool changetask = false;  // bruges til at definere hvornår robotten er imellem to opgaver
 bool racedone = false;	// Sættes automatisk til sandt når task9 er gennemført
 bool count_blacks = true; // Bruges til at tænde og slukke for tælleren af sorte linjer
-int curr_task = 7;		  // For at teste specifikke udfordringer, skift dette tal
+int curr_task = 0;		  // For at teste specifikke udfordringer, skift dette tal
 int dir = 1;			  // sæt 1 for at køre på venstre side af grå streg, 0 for at køre på højre
 int black_counter = 0;	// Bruges til at holde styr på antallet af krydsede sorte linjer
 float perfect_line;		  // variabel til at holde information om den kalibrerede linje
 float speed = 30;		  // Robottens hastighed i PID-loopet.
+const float stdspeed = 20; // Standard
 
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
@@ -146,7 +147,7 @@ void dreje(float turn_degrees)
 // FUNKTION TIL AT K�?RE ET ANTAL CM
 // Indsæt to værdier i drive(x, y); for at køre ligeud for en afstand (x) ved en hastighed (y)
 
-void drive(float CM, int speedX)
+void drive(float CM, int speedX = stdspeed)
 {
 	float forwardT = (360 / (5.5 * PI)) * CM; //udregning af rotation i grader motoren skal køre
 	resetMotorEncoder(motorL);				  //5,5 er hjulstørrelsen
@@ -156,6 +157,48 @@ void drive(float CM, int speedX)
 	while (abs(getMotorEncoder(motorL)) < (abs(forwardT) - 4))
 	{ //de minus 4 er en buffer in case motoren ikke rammer target pr?cis
 	} //while loopet eksisterer for at sikre at robotten er k?rt f?rdig f?r den udf?rer ny kode
+}
+
+//
+// FUNKTION TIL AT SCANNE EFTER OBJEKTER SÅ SOM EN FLASKE
+// 
+
+void scan(float venstre_scan = 45, float hojre_scan = 45)
+{
+    int old_scan_dist = 256;
+    int scan_directionL;
+    int scan_directionR;
+    float hjul_omA = 5.5;                                                         //hjulets omkreds i cm
+    float sporviddeA = 13.4;                                                      //sporvidde pï¿½ bi
+    float correctionA = 1;                                                        //float til at lave smï¿½ corrections pï¿½ mï¿½ngden bil
+    float first_turn = correctionA * (sporviddeA * ((-venstre_scan) / hjul_omA)); //udregning af antal grader motoren skal dreje fï¿½
+    resetMotorEncoder(motorL);
+    resetMotorEncoder(motorR);
+    setMotorTarget(motorL, -first_turn, 10);
+    setMotorTarget(motorR, first_turn, 10);
+    while (abs(getMotorEncoder(motorL)) < (abs(first_turn) - 4))
+    {
+    }
+    float second_turn = correctionA * (sporviddeA * ((hojre_scan + venstre_scan) / hjul_omA));
+    resetMotorEncoder(motorL);
+    resetMotorEncoder(motorR);
+    setMotorTarget(motorL, -second_turn, 8);
+    setMotorTarget(motorR, second_turn, 8);
+    while (abs(getMotorEncoder(motorL)) < (abs(second_turn) - 4))
+    { //de minus 4 er en buffer in case motoren ikke rammer target praecis
+        if (getUSDistance(ultrasense) < old_scan_dist) //scanner for objekter tæt på og gemmer motorposition for nærmeste sted
+        {
+            scan_directionL = getMotorEncoder(motorL);
+            scan_directionR = getMotorEncoder(motorR);
+            old_scan_dist = getUSDistance(ultrasense);
+        }
+    }
+    delay(500); //sikrer den fører 
+    setMotorTarget(motorL, scan_directionL, 5);
+    setMotorTarget(motorR, scan_directionR, 5); 
+    while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 4))
+    { //de minus 4 er en buffer in case motoren ikke rammer target praecis
+    }
 }
 
 //
@@ -195,14 +238,15 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 			}
 		}
 	}
+	int calstate = 0;
 	while (color_cal == true) // Når kalibrering er startet,
-	{
-		int calstate = 0;
+	{	
 		if (calstate == 0)
 		{
 			displayCenteredBigTextLine(2, "Calibrating");
 			displayCenteredBigTextLine(4, "color sensor");
 			sleep(2000);
+			eraseDisplay();
 			calstate++;
 		}
 		else if (calstate == 1)
@@ -287,7 +331,7 @@ task main()
 						count_blacks = false;
 						Linefollow_PID(false);
 						dreje(+45);
-						drive(30,20);
+						drive(30);
 						dreje(-45);
 						count_blacks = true;
 					}
@@ -301,7 +345,7 @@ task main()
 						count_blacks = false;
 						Linefollow_PID(false);
 						dreje(-45);
-						drive(30, 20);
+						drive(30);
 						dreje(+45);
 						count_blacks = true;
 					}
@@ -369,7 +413,7 @@ task main()
 				else if (black_counter == 7)
 				{
 					dreje(-45);
-					drive(40, 20);
+					drive(40);
 					while (SensorValue(colorsense) > perfect_line)
 					{
 						setMotorSpeed(motorR, 20);
@@ -421,9 +465,9 @@ task main()
 				{
 					count_blacks = false;
 					Linefollow_PID(false);
-					drive(4, 20);
+					drive(4);
 					dreje(45);
-					drive(15, 20);
+					drive(15);
 					while (SensorValue(colorsense) > perfect_line)
 					{
 						setMotorSpeed(motorR, 28);
