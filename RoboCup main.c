@@ -127,16 +127,18 @@ void PID_distance(float cm)
 // FUNKTION TIL AT DREJE X ANTAL GRADER
 // Indsæt en værdi i dreje(xx); for at dreje det antal grader.
 
-void dreje(float turn_degrees){ //turn_degrees er lig antal grader bilen drejer. Positiv = h�jre, negativ = venstre
-	float hjul_om = 5.5;					//hjulets omkreds i cm
-	float sporvidde = 13.4;				//sporvidde p� bilen
-	float correction = 1.032;					//float til at lave sm� corrections p� m�ngden bilen drejer
-	float calc_turn = correction*(sporvidde*(turn_degrees/hjul_om)); //udregning af antal grader motoren skal dreje
+void dreje(float turn_degrees)
+{																		   //turn_degrees er lig antal grader bilen drejer. Positiv = h�jre, negativ = venstre
+	float hjul_om = 5.5;												   //hjulets omkreds i cm
+	float sporvidde = 13.4;												   //sporvidde p� bilen
+	float correction = 1.032;											   //float til at lave sm� corrections p� m�ngden bilen drejer
+	float calc_turn = correction * (sporvidde * (turn_degrees / hjul_om)); //udregning af antal grader motoren skal dreje
 	resetMotorEncoder(motorL);
-  resetMotorEncoder(motorR);
-  setMotorTarget(motorL, -calc_turn, 10);
+	resetMotorEncoder(motorR);
+	setMotorTarget(motorL, -calc_turn, 10);
 	setMotorTarget(motorR, calc_turn, 10);
-  while(abs(getMotorEncoder(motorL))<(abs(calc_turn)-4)){ //de minus 4 er en buffer in case motoren ikke rammer target pr�cis
+	while (abs(getMotorEncoder(motorL)) < (abs(calc_turn) - 4))
+	{ //de minus 4 er en buffer in case motoren ikke rammer target pr�cis
 	} //while loopet eksisterer for at sikre at robotten er helt drejet f�r den udf�rer ny kode
 }
 
@@ -205,7 +207,9 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 		}
 		else if (calstate == 1)
 		{
-			displayCenteredBigTextLine(2, "gray: ", "%4f", SensorValue[colorsense]);
+			char gray_val_LCD[3];
+			sprintf(gray_val_LCD, "%3d", SensorValue[colorsense]);
+			displayCenteredBigTextLine(2, "gray: ", white_val_LCD);
 			displayCenteredTextLine(4, "");
 			displayCenteredTextLine(5, "press button to calibrate");
 			if (SensorValue[calbutton] == 1)
@@ -222,7 +226,9 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 		}
 		else if (calstate == 2)
 		{
-			displayCenteredBigTextLine(2, "white: ", "%4f", SensorValue[colorsense]);
+			char white_val_LCD[3];
+			sprintf(white_val_LCD, "%3d", SensorValue[colorsense]);
+			displayCenteredBigTextLine(2, "white: ", white_val_LCD);
 			displayCenteredTextLine(4, "");
 			displayCenteredTextLine(5, "press button to calibrate");
 			if (SensorValue[calbutton] == 1)
