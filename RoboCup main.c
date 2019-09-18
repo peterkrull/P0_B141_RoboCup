@@ -1,13 +1,12 @@
-#pragma config(Sensor, S1, ultrasense, sensorEV3_Ultrasonic)
-#pragma config(Sensor, S2, calbutton, sensorEV3_Touch)
-#pragma config(Sensor, S3, colorsense, sensorEV3_Color)
-#pragma config(Sensor, S4, homesense, sensorEV3_Touch)
-#pragma config(Motor, motorA, motorL, tmotorEV3_Large, PIDControl, encoder)
-#pragma config(Motor, motorB, motorR, tmotorEV3_Large, PIDControl, encoder)
-#pragma config(Motor, motorC, klomotor, tmotorEV3_Medium, PIDControl, encoder)
+#pragma config(Sensor, 	S1, 	ultrasense, sensorEV3_Ultrasonic)
+#pragma config(Sensor, 	S2, 	calbutton, 	sensorEV3_Touch)
+#pragma config(Sensor, 	S3, 	colorsense, sensorEV3_Color)
+#pragma config(Sensor, 	S4, 	homesense, 	sensorEV3_Touch)
+#pragma config(Motor, 	motorA, motorL, 	tmotorEV3_Large, 	PIDControl, encoder)
+#pragma config(Motor, 	motorB, motorR, 	tmotorEV3_Large, 	PIDControl, encoder)
+#pragma config(Motor, 	motorC, klomotor, 	tmotorEV3_Medium, 	PIDControl, encoder)
 
-// Bruges til slå specifikke opgaver til/fra
-#define task1 true  // Kør af banen of skift til anden grå linje
+#define task1 true	// Kør af banen of skift til anden grå linje
 #define task2 true  // Flyt flaske bag den sorte streg
 #define task3 true  // Kør over vippe
 #define task4 true  // Find den 3. af 4 grå streger
@@ -17,24 +16,28 @@
 #define task8 true  // Kør rundt om flasken (gentagelse af task6)
 #define task9 true  // Kør ind til midten af målstregen
 
-bool racedone = false;	 // Sættes automatisk til sandt når task9 er gennemført
-bool count_blacks = true;  // Bruges til at tænde og slukke for tælleren af sorte linjer
-int curr_task = 0;		   // For at teste specifikke udfordringer, skift dette tal
-int dir = 0;			   // sæt 1 for at køre på venstre side af grå streg, 0 for at køre på højre
-int black_counter = 0;	 // Bruges til at holde styr på antallet af krydsede sorte linjer
-float perfect_line;		   // variabel til at holde information om den kalibrerede linje
-int sens;
+// Sættes til true når task9 er gennemført
+bool racedone = false;
+// Bruges til at tænde og slukke for tælleren af sorte linjer
+bool count_blacks = true;
+// Bruges til at holde værdien af den nuværende opgave
+int curr_task = 0;
+// sæt 1 for at køre på venstre side af grå streg, -1 for at køre på højre
+int dir = -1;
+// Bruges til at holde styr på antallet af krydsede sorte linjer
+int black_counter = 0;
+// variabel til at holde information om den kalibrerede linje	 	
+float perfect_line;
 
-// PID Værdier
-float white_val = 64; // Variabel til værdien af den hvide del af banen
-float gray_val = 37;  // Variabel til værdien af den grå del af banen
-float black_val = 5;  // Variabel til værdien af den sorte del af banen
+// Variabel til værdien af den hvide del af banen
+float white_val = 64;
+// Variabel til værdien af den grå del af banen 		
+float gray_val = 37;
+// Variabel til værdien af den sorte del af banen		
+float black_val = 5;
 
-//
-// LINEFOLLOW PID FUNKTION
-//
-
-void Linefollow_PID(bool enable_tracking, float speed = 20) // Funktionen der bruges til at følge linjen ved brug af PID-loop
+// Bruges til at følge en linje ved hjælp af et PID udregninger
+void Linefollow_PID(bool enable_tracking, float speed = 20)
 {
 	if (enable_tracking == true)
 	{
@@ -56,18 +59,8 @@ void Linefollow_PID(bool enable_tracking, float speed = 20) // Funktionen der br
 		float color_diff;
 		int multi;
 
-		// brugt til at ændre siden som robotten følger (ændrer fortegnet for fejlen)
-		if (dir == 1)
-		{
-			multi = 1;
-		}
-		else if (dir == 0)
-		{
-			multi = -1;
-		}
-
 		// Udregn størrelsen af fejlen : Proportionel
-		errors = multi * (SensorValue(colorsense) - perfect_line);
+		errors = dir * (SensorValue(colorsense) - perfect_line);
 
 		color_diff = (white_val - gray_val) / 2; // Udregner størrelsen af farveforskellen mellem hvid, error og grå
 		if (errors > color_diff)				 // Hvis fejlen er større end den målte hvide farve
@@ -95,11 +88,7 @@ void Linefollow_PID(bool enable_tracking, float speed = 20) // Funktionen der br
 		setMotorSpeed(motorR, -speed + ((turn * speed) / 10));
 	}
 }
-
-//
-// FUNKTION TIL AT køre en distance med PID tændt
-//
-
+// Bruges til at køre en bestemt distance med PID lonefollowing
 void PID_distance(float cm, float speed = 20)
 {
 	float maal = (360 / (5.5 * PI)) * cm;	  //Formel for at beregne hvor mange "ticks" den skal k?re for en hvis l?ngde(der er indsat 10cm)
@@ -120,12 +109,9 @@ void PID_distance(float cm, float speed = 20)
 	delay(200);
 }
 
-//
-// FUNKTION TIL AT DREJE X ANTAL GRADER
-// Indsæt en værdi i dreje(xx); for at dreje det antal grader.
-
+// Bruges til at dreje(x) antal grader
 void dreje(float turn_degrees)
-{																		   //turn_degrees er lig antal grader bilen drejer. Positiv = h�jre, negativ = venstre
+{
 	float hjul_om = 5.5;												   //hjulets omkreds i cm
 	float sporvidde = 13.4;												   //sporvidde p� bilen
 	float correction = 1.032;											   //float til at lave sm� corrections p� m�ngden bilen drejer
@@ -140,10 +126,7 @@ void dreje(float turn_degrees)
 	delay(200);
 }
 
-//
-// FUNKTION TIL AT K�?RE ET ANTAL CM
-// Indsæt to værdier i drive(x, y); for at køre ligeud for en afstand (x) ved en hastighed (y)
-
+// Bruges til at drive(x) antal centimeter
 void drive(float CM, int speedX = 20)
 {
 	float forwardT = (360 / (5.5 * PI)) * CM; //udregning af rotation i grader motoren skal køre
@@ -157,10 +140,7 @@ void drive(float CM, int speedX = 20)
 	delay(200);
 }
 
-//
-// FUNKTION TIL AT SCANNE EFTER OBJEKTER SÅ SOM EN FLASKE
-//
-
+// Bruges til at scanne efter en flaske på banen
 void scan(float venstre_scan = 45, float hojre_scan = 45)
 {
 	int old_scan_dist = 256;
@@ -199,11 +179,8 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
 	}
 }
 
-//
-// FUNKTION TIL AT T�?LLE SORTE STREGER
-//
-
-void black_line_counter()
+// Tæller hvor mange sorte linjer robotten kører over. on/off ved count_blacks = true/false
+void black_line_counter() //timer2
 {
 	if (time1[T2] > 3000 && SensorValue(colorsense) < 20 && SensorValue(calbutton) == 0 && count_blacks == true)
 	{
@@ -212,11 +189,8 @@ void black_line_counter()
 	}
 }
 
-//
-// FUNKTION TIL AT KALIBRERE OG NULSTILLE KLO
-//
-
-void klo_cal(int klo_pos = 1) //kalibrering af kloen (bruger timer4)
+// Bruges til at kalibrere kloens placering
+void klo_cal(int klo_pos = 1) //timer4
 {
 	int kalibration = 0;
 	clearTimer(timer4);
@@ -240,11 +214,8 @@ void klo_cal(int klo_pos = 1) //kalibrering af kloen (bruger timer4)
 	}
 }
 
-//
-// FUNKTION TIL AT KALIBRERE GR�?/HVID FARVE
-// Køres én gang i starten
-
-void color_calibrate() // Funktion til kalibrering af farvesensor
+// Bruges til at kalibrere de grå og hvide farver på banen
+void color_cal() //timer3
 {
 	bool color_cal = false;
 	while (color_cal == false)
@@ -278,7 +249,7 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 		else if (calstate == 1)
 		{
 			char gray_val_LCD[15];
-			sens = SensorValue[colorsense];
+			int sens = SensorValue[colorsense];
 			sprintf(gray_val_LCD, "Gray val: %3d", sens);
 			displayCenteredBigTextLine(2, gray_val_LCD);
 			displayCenteredTextLine(4, "");
@@ -298,7 +269,7 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 		else if (calstate == 2)
 		{
 			char white_val_LCD[15];
-			sens = SensorValue[colorsense];
+			int sens = SensorValue[colorsense];
 			sprintf(white_val_LCD, "White val: %3d", sens);
 			displayCenteredBigTextLine(2, white_val_LCD);
 			displayCenteredTextLine(4, "");
@@ -333,14 +304,16 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 
 task main()
 {
-	klo_cal();
-	perfect_line = gray_val + ((white_val - gray_val) / 2); // udregner den perfekte linje én gang i starten
-	while (racedone == false)								// Main loop til at køre når race endnu ikke er færdig
+	
+	perfect_line = gray_val + ((white_val - gray_val) / 2); // Udregner den perfekte linje én gang i starten
+	while (racedone == false) // Main loop til at køre når race endnu ikke er færdig
 	{
 		black_line_counter();
-		if (curr_task == 0) // Det initielle stadie af robotten. Setup placeres her
+
+		if (curr_task == 0)
 		{
-			color_calibrate(); // farvekalibrering kører i starten
+			klo_cal();   // Kloen kalibreres som det første, så vi ved hvor den er
+			color_cal(); // farvekalibrering kører i starten
 		}
 
 		if (curr_task == 1)
@@ -462,9 +435,9 @@ task main()
 			}
 		}
 
-		if (curr_task == 4) // Betingelser for udførelse af opgave 4
+		if (curr_task == 4) 
 		{
-			if (black_counter < 6)
+			if (black_counter < 6) // Betingelser for udførelse af opgave 4
 			{
 				black_counter = 6;
 			}
