@@ -25,7 +25,6 @@ int dir = 1;			  // sæt 1 for at køre på venstre side af grå streg, 0 for at
 int black_counter = 0;	// Bruges til at holde styr på antallet af krydsede sorte linjer
 float perfect_line;		  // variabel til at holde information om den kalibrerede linje
 float speed = 30;		  // Robottens hastighed i PID-loopet.
-!=
 
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
@@ -97,6 +96,30 @@ void Linefollow_PID(bool enable_tracking) // Funktionen der bruges til at følge
 		// Set motor speed
 		setMotorSpeed(motorL, -speed - ((turn * speed) / 10));
 		setMotorSpeed(motorR, -speed + ((turn * speed) / 10));
+	}
+}
+
+//
+// FUNKTION TIL AT køre en distance med PID tændt
+//
+
+void PID_distance(float cm)
+{
+
+	float maal = (360 / (5.5 * PI)) * cm;	  //Formel for at beregne hvor mange "ticks" den skal k?re for en hvis l?ngde(der er indsat 10cm)
+	float distanceR = getMotorEncoder(motorR); //giver værdien for h?jre og venste's encoder
+	float distanceL = getMotorEncoder(motorL);
+	float distance = (distanceR + distanceL) / 2; //gennemsnit for de to tick v?rdier
+
+	resetMotorEncoder(motorL); //resetter venstre motors encoder
+	resetMotorEncoder(motorR); //resetter højre motors encoder
+	while (distance < maal)
+	{ // while loop der stoppe n?r robotten har k?rt en x l?ngde
+		maal = (360 / 5.5 * PI) * cm;
+		distanceR = getMotorEncoder(motorR);
+		distanceL = getMotorEncoder(motorL);
+		distance = (distanceR + distanceL) / 2;
+		Linefollow_PID(true); //linefollow
 	}
 }
 
