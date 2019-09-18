@@ -116,12 +116,12 @@ void PID_distance(float cm)
 	
 	while (distance < maal)
 	{ // while loop der stoppe n?r robotten har k?rt en x l?ngde
-		maal = (360 / 5.5 * PI) * cm;
-		distanceR = getMotorEncoder(motorR);
-		distanceL = getMotorEncoder(motorL);
+		distanceR = -getMotorEncoder(motorR);
+		distanceL = -getMotorEncoder(motorL);
 		distance = (distanceR + distanceL) / 2;
 		Linefollow_PID(true); //linefollow
 	}
+	Linefollow_PID(false);
 	delay(200);
 }
 
@@ -218,7 +218,7 @@ void black_line_counter()
 }
 
 //
-// klo cal
+// FUNKTION TIL AT KALIBRERE OG NULSTILLE KLO
 //
 
 void klo_cal(int klo_pos = 1) //kalibrering af kloen (bruger timer4)
@@ -528,7 +528,9 @@ task main()
 						setMotorSpeed(motorR, -28);
 						setMotorSpeed(motorL, -20);
 					}
-					dreje(30);
+					if (curr_task == 6){dreje(40);}
+					if (curr_task == 8){dreje(30);}
+
 					count_blacks = true;
 					Linefollow_PID(true);
 					curr_task++;
