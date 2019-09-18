@@ -26,6 +26,7 @@ int black_counter = 0;	// Bruges til at holde styr på antallet af krydsede sort
 float perfect_line;		  // variabel til at holde information om den kalibrerede linje
 float speed = 30;		  // Robottens hastighed i PID-loopet.
 const float stdspeed = 20; // Standard
+int sens;
 
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
@@ -251,9 +252,10 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 		}
 		else if (calstate == 1)
 		{
-			char gray_val_LCD[3];
-			sprintf(gray_val_LCD, "%3d", SensorValue[colorsense]);
-			displayCenteredBigTextLine(2, "gray: ", gray_val_LCD);
+			char gray_val_LCD[15];
+			sens = SensorValue[colorsense];
+			sprintf(gray_val_LCD, "Gray val: %3d", sens);
+			displayCenteredBigTextLine(2, gray_val_LCD);
 			displayCenteredTextLine(4, "");
 			displayCenteredTextLine(5, "press button to calibrate");
 			if (SensorValue[calbutton] == 1)
@@ -270,9 +272,10 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 		}
 		else if (calstate == 2)
 		{
-			char white_val_LCD[3];
-			sprintf(white_val_LCD, "%3d", SensorValue[colorsense]);
-			displayCenteredBigTextLine(2, "white: ", white_val_LCD);
+			char white_val_LCD[15];
+			sens = SensorValue[colorsense];
+			sprintf(white_val_LCD, "White val: %3d", sens);
+			displayCenteredBigTextLine(2, white_val_LCD);
 			displayCenteredTextLine(4, "");
 			displayCenteredTextLine(5, "press button to calibrate");
 			if (SensorValue[calbutton] == 1)
