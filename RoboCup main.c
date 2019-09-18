@@ -209,7 +209,7 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 		{
 			char gray_val_LCD[3];
 			sprintf(gray_val_LCD, "%3d", SensorValue[colorsense]);
-			displayCenteredBigTextLine(2, "gray: ", white_val_LCD);
+			displayCenteredBigTextLine(2, "gray: ", gray_val_LCD);
 			displayCenteredTextLine(4, "");
 			displayCenteredTextLine(5, "press button to calibrate");
 			if (SensorValue[calbutton] == 1)
@@ -287,7 +287,7 @@ task main()
 						count_blacks = false;
 						Linefollow_PID(false);
 						dreje(+45);
-						drive(30);
+						drive(30,20);
 						dreje(-45);
 						count_blacks = true;
 					}
@@ -301,7 +301,7 @@ task main()
 						count_blacks = false;
 						Linefollow_PID(false);
 						dreje(-45);
-						drive(30);
+						drive(30, 20);
 						dreje(+45);
 						count_blacks = true;
 					}
@@ -369,7 +369,7 @@ task main()
 				else if (black_counter == 7)
 				{
 					dreje(-45);
-					drive(40);
+					drive(40, 20);
 					while (SensorValue(colorsense) > perfect_line)
 					{
 						setMotorSpeed(motorR, 20);
@@ -421,9 +421,9 @@ task main()
 				{
 					count_blacks = false;
 					Linefollow_PID(false);
-					drive(4);
+					drive(4, 20);
 					dreje(45);
-					drive(15);
+					drive(15, 20);
 					while (SensorValue(colorsense) > perfect_line)
 					{
 						setMotorSpeed(motorR, 28);
