@@ -4,7 +4,7 @@
 #pragma config(Sensor, S4, homesense, sensorEV3_Touch)
 #pragma config(Motor, motorA, motorL, tmotorEV3_Large, PIDControl, encoder)
 #pragma config(Motor, motorB, motorR, tmotorEV3_Large, PIDControl, encoder)
-#pragma config(Motor, motorC, grapmotor, tmotorEV3_Medium, PIDControl, encoder)
+#pragma config(Motor, motorC, klomotor, tmotorEV3_Medium, PIDControl, encoder)
 
 // Bruges til slå specifikke opgaver til/fra
 #define task1 true  // Kør af banen of skift til anden grå linje
@@ -17,22 +17,22 @@
 #define task8 true  // Kør rundt om flasken (gentagelse af task6)
 #define task9 true  // Kør ind til midten af målstregen
 
-bool changetask = false;  // bruges til at definere hvornår robotten er imellem to opgaver
-bool racedone = false;	// Sættes automatisk til sandt når task9 er gennemført
-bool count_blacks = true; // Bruges til at tænde og slukke for tælleren af sorte linjer
-int curr_task = 0;		  // For at teste specifikke udfordringer, skift dette tal
-int dir = 1;			  // sæt 1 for at køre på venstre side af grå streg, 0 for at køre på højre
-int black_counter = 0;	// Bruges til at holde styr på antallet af krydsede sorte linjer
-float perfect_line;		  // variabel til at holde information om den kalibrerede linje
-float speed = 30;		  // Robottens hastighed i PID-loopet.
+bool changetask = false;   // bruges til at definere hvornår robotten er imellem to opgaver
+bool racedone = false;	 // Sættes automatisk til sandt når task9 er gennemført
+bool count_blacks = true;  // Bruges til at tænde og slukke for tælleren af sorte linjer
+int curr_task = 6;		   // For at teste specifikke udfordringer, skift dette tal
+int dir = 0;			   // sæt 1 for at køre på venstre side af grå streg, 0 for at køre på højre
+int black_counter = 9;	 // Bruges til at holde styr på antallet af krydsede sorte linjer
+float perfect_line;		   // variabel til at holde information om den kalibrerede linje
+float speed = 30;		   // Robottens hastighed i PID-loopet.
 const float stdspeed = 20; // Standard
 int sens;
 
 // Variabel til at holde sensor aflæsning
 int line_sensor_val;
 
-float white_val = 80; // Variabel til værdien af den hvide del af banen
-float gray_val = 43;  // Variabel til værdien af den grå del af banen
+float white_val = 64; // Variabel til værdien af den hvide del af banen
+float gray_val = 37;  // Variabel til værdien af den grå del af banen
 float black_val = 5;  // Variabel til værdien af den sorte del af banen
 
 //
@@ -107,14 +107,13 @@ void Linefollow_PID(bool enable_tracking) // Funktionen der bruges til at følge
 
 void PID_distance(float cm)
 {
-
 	float maal = (360 / (5.5 * PI)) * cm;	  //Formel for at beregne hvor mange "ticks" den skal k?re for en hvis l?ngde(der er indsat 10cm)
+	resetMotorEncoder(motorL); //resetter venstre motors encoder
+	resetMotorEncoder(motorR); //resetter højre motors encoder
 	float distanceR = getMotorEncoder(motorR); //giver værdien for h?jre og venste's encoder
 	float distanceL = getMotorEncoder(motorL);
 	float distance = (distanceR + distanceL) / 2; //gennemsnit for de to tick v?rdier
-
-	resetMotorEncoder(motorL); //resetter venstre motors encoder
-	resetMotorEncoder(motorR); //resetter højre motors encoder
+	
 	while (distance < maal)
 	{ // while loop der stoppe n?r robotten har k?rt en x l?ngde
 		maal = (360 / 5.5 * PI) * cm;
@@ -123,6 +122,7 @@ void PID_distance(float cm)
 		distance = (distanceR + distanceL) / 2;
 		Linefollow_PID(true); //linefollow
 	}
+	delay(200);
 }
 
 //
@@ -139,9 +139,10 @@ void dreje(float turn_degrees)
 	resetMotorEncoder(motorR);
 	setMotorTarget(motorL, -calc_turn, 10);
 	setMotorTarget(motorR, calc_turn, 10);
-	while (abs(getMotorEncoder(motorL)) < (abs(calc_turn) - 4))
+	while (abs(getMotorEncoder(motorL)) < (abs(calc_turn) - 6))
 	{ //de minus 4 er en buffer in case motoren ikke rammer target pr�cis
 	} //while loopet eksisterer for at sikre at robotten er helt drejet f�r den udf�rer ny kode
+	delay(200);
 }
 
 //
@@ -155,51 +156,52 @@ void drive(float CM, int speedX = stdspeed)
 	resetMotorEncoder(motorR);
 	setMotorTarget(motorL, -forwardT, abs(speedX));
 	setMotorTarget(motorR, -forwardT, abs(speedX));
-	while (abs(getMotorEncoder(motorL)) < (abs(forwardT) - 4))
+	while (abs(getMotorEncoder(motorL)) < (abs(forwardT) - 6))
 	{ //de minus 4 er en buffer in case motoren ikke rammer target pr?cis
 	} //while loopet eksisterer for at sikre at robotten er k?rt f?rdig f?r den udf?rer ny kode
+	delay(200);
 }
 
 //
 // FUNKTION TIL AT SCANNE EFTER OBJEKTER SÅ SOM EN FLASKE
-// 
+//
 
 void scan(float venstre_scan = 45, float hojre_scan = 45)
 {
-    int old_scan_dist = 256;
-    int scan_directionL;
-    int scan_directionR;
-    float hjul_omA = 5.5;                                                         //hjulets omkreds i cm
-    float sporviddeA = 13.4;                                                      //sporvidde pï¿½ bi
-    float correctionA = 1;                                                        //float til at lave smï¿½ corrections pï¿½ mï¿½ngden bil
-    float first_turn = correctionA * (sporviddeA * ((-venstre_scan) / hjul_omA)); //udregning af antal grader motoren skal dreje fï¿½
-    resetMotorEncoder(motorL);
-    resetMotorEncoder(motorR);
-    setMotorTarget(motorL, -first_turn, 10);
-    setMotorTarget(motorR, first_turn, 10);
-    while (abs(getMotorEncoder(motorL)) < (abs(first_turn) - 4))
-    {
-    }
-    float second_turn = correctionA * (sporviddeA * ((hojre_scan + venstre_scan) / hjul_omA));
-    resetMotorEncoder(motorL);
-    resetMotorEncoder(motorR);
-    setMotorTarget(motorL, -second_turn, 8);
-    setMotorTarget(motorR, second_turn, 8);
-    while (abs(getMotorEncoder(motorL)) < (abs(second_turn) - 4))
-    { //de minus 4 er en buffer in case motoren ikke rammer target praecis
-        if (getUSDistance(ultrasense) < old_scan_dist) //scanner for objekter tæt på og gemmer motorposition for nærmeste sted
-        {
-            scan_directionL = getMotorEncoder(motorL);
-            scan_directionR = getMotorEncoder(motorR);
-            old_scan_dist = getUSDistance(ultrasense);
-        }
-    }
-    delay(500); //sikrer den fører 
-    setMotorTarget(motorL, scan_directionL, 5);
-    setMotorTarget(motorR, scan_directionR, 5); 
-    while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 4))
-    { //de minus 4 er en buffer in case motoren ikke rammer target praecis
-    }
+	int old_scan_dist = 256;
+	int scan_directionL;
+	int scan_directionR;
+	float hjul_omA = 5.5;														  //hjulets omkreds i cm
+	float sporviddeA = 13.4;													  //sporvidde pï¿½ bi
+	float correctionA = 1;														  //float til at lave smï¿½ corrections pï¿½ mï¿½ngden bil
+	float first_turn = correctionA * (sporviddeA * ((-venstre_scan) / hjul_omA)); //udregning af antal grader motoren skal dreje fï¿½
+	resetMotorEncoder(motorL);
+	resetMotorEncoder(motorR);
+	setMotorTarget(motorL, -first_turn, 10);
+	setMotorTarget(motorR, first_turn, 10);
+	while (abs(getMotorEncoder(motorL)) < (abs(first_turn) - 6))
+	{
+	}
+	float second_turn = correctionA * (sporviddeA * ((hojre_scan + venstre_scan) / hjul_omA));
+	resetMotorEncoder(motorL);
+	resetMotorEncoder(motorR);
+	setMotorTarget(motorL, -second_turn, 8);
+	setMotorTarget(motorR, second_turn, 8);
+	while (abs(getMotorEncoder(motorL)) < (abs(second_turn) - 6))
+	{												   //de minus 4 er en buffer in case motoren ikke rammer target praecis
+		if (getUSDistance(ultrasense) < old_scan_dist) //scanner for objekter tæt på og gemmer motorposition for nærmeste sted
+		{
+			scan_directionL = getMotorEncoder(motorL);
+			scan_directionR = getMotorEncoder(motorR);
+			old_scan_dist = getUSDistance(ultrasense);
+		}
+	}
+	delay(500); //sikrer den fører
+	setMotorTarget(motorL, scan_directionL, 5);
+	setMotorTarget(motorR, scan_directionR, 5);
+	while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 6))
+	{ //de minus 4 er en buffer in case motoren ikke rammer target praecis
+	}
 }
 
 //
@@ -212,6 +214,29 @@ void black_line_counter()
 	{
 		black_counter++;
 		clearTimer(T2);
+	}
+}
+
+//
+// klo cal
+//
+
+void klo_cal(int klo_pos = 1) //kalibrering af kloen (bruger timer4)
+{int kalibration = 0;
+	clearTimer(timer4);
+	while(kalibration == 0){
+		while(time1[timer4] < 500){
+			setMotorSpeed(klomotor, 20);//for at sikre switchen ikke er trykket fra starten
+		}
+		setMotorSpeed(klomotor, -70);
+		if (getTouchValue(homesense)== 1){ //inds�t switchnavn p� "a"'s plads
+			setMotorSpeed(klomotor, 0);
+			resetMotorEncoder(klomotor);
+			setMotorTarget(klomotor, klo_pos, 100);
+			while(getMotorEncoder(klomotor)< klo_pos-4){
+			}
+			kalibration = 1;
+		}
 	}
 }
 
@@ -241,7 +266,7 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 	}
 	int calstate = 0;
 	while (color_cal == true) // Når kalibrering er startet,
-	{	
+	{
 		if (calstate == 0)
 		{
 			displayCenteredBigTextLine(2, "Calibrating");
@@ -308,6 +333,7 @@ void color_calibrate() // Funktion til kalibrering af farvesensor
 
 task main()
 {
+	klo_cal();
 	perfect_line = gray_val + ((white_val - gray_val) / 2); // udregner den perfekte linje én gang i starten
 	while (racedone == false)								// Main loop til at køre når race endnu ikke er færdig
 	{
@@ -390,11 +416,37 @@ task main()
 		{
 			if (task3 == true) // Betingelser for udførelse af opgave 3
 			{
+				if (black_counter == 4)
+				{
+					Linefollow_PID(true);
+				}
 				if (black_counter == 5)
 				{
+					for (int i = 0; i < 1; i++)
+					{
+						drive(20, 30);
+						dreje(-90);
+					}
+					Linefollow_PID(true);
 				}
 				if (black_counter == 6)
 				{
+					for (int i = 0; i < 1; i++)
+					{
+						playTone(1200, 200);
+						Linefollow_PID(false);
+						drive(40, 60);
+						delay(500);
+						PID_distance(80);
+						delay(500);
+						drive(20);
+						delay(500);
+						PID_distance(32);
+						delay(500);
+						dreje(-90);
+						delay(500);
+					}
+					curr_task++;
 				}
 				// Indsæt opgave 3 loop her **********************
 			}
@@ -473,10 +525,11 @@ task main()
 					drive(15);
 					while (SensorValue(colorsense) > perfect_line)
 					{
-						setMotorSpeed(motorR, 28);
-						setMotorSpeed(motorL, 20);
+						setMotorSpeed(motorR, -28);
+						setMotorSpeed(motorL, -20);
 					}
-					dreje(45);
+					dreje(30);
+					count_blacks = true;
 					Linefollow_PID(true);
 					curr_task++;
 				}
@@ -489,21 +542,47 @@ task main()
 
 		if (curr_task == 7)
 		{
-			while (task7 == true) // Betingelser for udførelse af opgave 7
+			
+			if (task7 == true) // Betingelser for udførelse af opgave 7
 			{
-				Linefollow_PID(true);
-				// Indsæt opgave 7 loop her **********************
+
+				if (black_counter == 10)
+				{
+					Linefollow_PID(true);
+				}
+				if (black_counter == 11)
+				{	
+					Linefollow_PID(false);
+					for (int i; i < 1; i++)
+					{
+						setMotorTarget(klomotor, 0, 100);
+						drive(42);
+						dreje(-35);
+						drive(30);
+						dreje(45);
+						drive(15);
+						dreje(45);
+						drive(20);
+						dreje(-40);
+						drive(35);
+					}
+					curr_task++;
+				}
 			}
-			/*else
+			else
 			{
 				curr_task++;
-			}*/
+			}
 		}
 
 		if (curr_task == 9)
 		{
 			if (task9 == true) // Betingelser for udførelse af opgave 9
 			{
+				if (black_counter == 12)
+				{
+					Linefollow_PID(true);
+				}
 				// Indsæt opgave 9 loop her **********************
 			}
 			else
