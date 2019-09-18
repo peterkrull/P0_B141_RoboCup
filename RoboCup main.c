@@ -127,37 +127,33 @@ void PID_distance(float cm)
 // FUNKTION TIL AT DREJE X ANTAL GRADER
 // Indsæt en værdi i dreje(xx); for at dreje det antal grader.
 
-void dreje(float turn_degrees)
-{																		   //turn_degrees er lig antal grader bilen drejer. Positiv = højre, negativ = venstre
-	float hjul_om = 6.5;												   //hjulets omkreds i cm
-	float sporvidde = 12.4;												   //sporvidde på bilen
-	float correction = 1;												   //float til at lave små corrections på mængden bilen drejer
-	float calc_turn = correction * (sporvidde * (turn_degrees / hjul_om)); //udregning af antal grader motoren skal dreje
+void dreje(float turn_degrees){ //turn_degrees er lig antal grader bilen drejer. Positiv = h�jre, negativ = venstre
+	float hjul_om = 5.5;					//hjulets omkreds i cm
+	float sporvidde = 13.4;				//sporvidde p� bilen
+	float correction = 1.032;					//float til at lave sm� corrections p� m�ngden bilen drejer
+	float calc_turn = correction*(sporvidde*(turn_degrees/hjul_om)); //udregning af antal grader motoren skal dreje
 	resetMotorEncoder(motorL);
-	resetMotorEncoder(motorR);
-	setMotorTarget(motorL, calc_turn, 10);
-	setMotorTarget(motorR, -calc_turn, 10);
-	while (abs(getMotorEncoder(motorL)) < (abs(calc_turn) - 6))
-	{			//de minus 4 er en buffer in case motoren ikke rammer target præcis
-	}			//while loopet eksisterer for at sikre at robotten er helt drejet før den udfører ny kode
-	sleep(250); // Skal kigges på igen senere
+  resetMotorEncoder(motorR);
+  setMotorTarget(motorL, -calc_turn, 10);
+	setMotorTarget(motorR, calc_turn, 10);
+  while(abs(getMotorEncoder(motorL))<(abs(calc_turn)-4)){ //de minus 4 er en buffer in case motoren ikke rammer target pr�cis
+	} //while loopet eksisterer for at sikre at robotten er helt drejet f�r den udf�rer ny kode
 }
 
 //
 // FUNKTION TIL AT K�?RE ET ANTAL CM
-// Indsæt en værdi i move(xx); for at kære ligeud
+// Indsæt to værdier i drive(x, y); for at køre ligeud for en afstand (x) ved en hastighed (y)
 
-void drive(float CM)
+void drive(float CM, int speedX)
 {
-	float forwardT = (360 / (5.5 * PI)) * CM;
-	resetMotorEncoder(motorL);
+	float forwardT = (360 / (5.5 * PI)) * CM; //udregning af rotation i grader motoren skal køre
+	resetMotorEncoder(motorL);				  //5,5 er hjulstørrelsen
 	resetMotorEncoder(motorR);
-	setMotorTarget(motorL, forwardT, 25);
-	setMotorTarget(motorR, forwardT, 25);
-	while (abs(getMotorEncoder(motorL)) < (abs(forwardT) - 6))
-	{			//de minus 4 er en buffer in case motoren ikke rammer target pr�cis
-	}			//while loopet eksisterer for at sikre at robotten er k�rt f�rdig f�r den udf�rer ny kode
-	sleep(250); // Skal kigges på igen senere
+	setMotorTarget(motorL, -forwardT, abs(speedX));
+	setMotorTarget(motorR, -forwardT, abs(speedX));
+	while (abs(getMotorEncoder(motorL)) < (abs(forwardT) - 4))
+	{ //de minus 4 er en buffer in case motoren ikke rammer target pr?cis
+	} //while loopet eksisterer for at sikre at robotten er k?rt f?rdig f?r den udf?rer ny kode
 }
 
 //
