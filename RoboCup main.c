@@ -626,6 +626,15 @@ task main()
 				{
 					Linefollow_PID(true);
 				}
+				if (black_counter == 13)
+				{
+					dreje(-59.36);
+					drive(12.79);
+					dreje(59.36);
+					distance(149);
+					dreje(90); //drejer 90 grader
+				}
+				curr_task++
 				// Indsæt opgave 9 loop her **********************
 			}
 			else
@@ -633,8 +642,8 @@ task main()
 				curr_task++;
 			}
 		}
-		
-		if (curr_task == 10) // celebrateion!
+
+		if (curr_task == 10) // done - celebrateion!
 		{
 			//Tone
 			int C = 261;
