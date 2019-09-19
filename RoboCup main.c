@@ -10,7 +10,7 @@
 #define task2 true  // Flyt flaske bag den sorte streg
 #define task3 true  // Kør over vippe
 #define task4 true  // Find den 3. af 4 grå streger
-#define task5 false // Flyt flasken til midten af skydeskiven
+#define task5 true // Flyt flasken til midten af skydeskiven
 #define task6 true  // Kør rundt om flasken
 #define task7 true  // Kør gennem hjørneformet forhindring
 #define task8 true  // Kør rundt om flasken (gentagelse af task6)
@@ -21,7 +21,7 @@ bool racedone = false;
 // Bruges til at tænde og slukke for tælleren af sorte linjer
 bool count_blacks = true;
 // Bruges til at holde værdien af den nuværende opgave
-int curr_task = 0;
+int curr_task = 2;
 // sæt 1 for at køre på venstre side af grå streg, -1 for at køre på højre
 int dir = -1;
 // Bruges til at holde styr på antallet af krydsede sorte linjer
@@ -35,6 +35,11 @@ float white_val = 64;
 float gray_val = 37;
 // Variabel til værdien af den sorte del af banen		
 float black_val = 5;
+
+const int klo_aaben = 9000;
+const int klo_luk = 4500;
+const int klo_loeft = 0;
+int flaskevej = 0;
 
 // Bruges til at følge en linje ved hjælp af et PID udregninger
 void Linefollow_PID(bool enable_tracking, float speed = 20)
@@ -144,40 +149,42 @@ void drive(float CM, int speedX = 20)
 // Bruges til at scanne efter en flaske på banen
 void scan(float venstre_scan = 45, float hojre_scan = 45)
 {
-	int old_scan_dist = 256;
-	int scan_directionL;
-	int scan_directionR;
-	float hjul_omA = 5.5;														  //hjulets omkreds i cm
-	float sporviddeA = 13.4;													  //sporvidde pï¿½ bi
-	float correctionA = 1;														  //float til at lave smï¿½ corrections pï¿½ mï¿½ngden bil
-	float first_turn = correctionA * (sporviddeA * ((-venstre_scan) / hjul_omA)); //udregning af antal grader motoren skal dreje fï¿½
-	resetMotorEncoder(motorL);
-	resetMotorEncoder(motorR);
-	setMotorTarget(motorL, -first_turn, 10);
-	setMotorTarget(motorR, first_turn, 10);
-	while (abs(getMotorEncoder(motorL)) < (abs(first_turn) - 6))
-	{
-	}
-	float second_turn = correctionA * (sporviddeA * ((hojre_scan + venstre_scan) / hjul_omA));
-	resetMotorEncoder(motorL);
-	resetMotorEncoder(motorR);
-	setMotorTarget(motorL, -second_turn, 8);
-	setMotorTarget(motorR, second_turn, 8);
-	while (abs(getMotorEncoder(motorL)) < (abs(second_turn) - 6))
-	{												   //de minus 4 er en buffer in case motoren ikke rammer target praecis
-		if (getUSDistance(ultrasense) < old_scan_dist) //scanner for objekter tæt på og gemmer motorposition for nærmeste sted
-		{
-			scan_directionL = getMotorEncoder(motorL);
-			scan_directionR = getMotorEncoder(motorR);
-			old_scan_dist = getUSDistance(ultrasense);
-		}
-	}
-	delay(500); //sikrer den fører
-	setMotorTarget(motorL, scan_directionL, 5);
-	setMotorTarget(motorR, scan_directionR, 5);
-	while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 6))
-	{ //de minus 4 er en buffer in case motoren ikke rammer target praecis
-	}
+    float old_scan_dist = 256.0;
+    int scan_directionL;
+    int scan_directionR;
+    float hjul_omA = 5.5;                                                         //hjulets omkreds i cm
+    float sporviddeA = 13.4;                                                      //sporvidde pÃ¯Â¿�
+    float correctionA = 1;                                                        //float til at lave smÃ¯Â¿Â½ corrections pÃ¯Â¿Â½ mÃ�
+    float first_turn = correctionA * (sporviddeA * ((-venstre_scan) / hjul_omA)); //udregning af antal grader motoren skal dreje fÃ¯Â
+    resetMotorEncoder(motorL);
+    resetMotorEncoder(motorR);
+    setMotorTarget(motorL, -first_turn, 10);
+    setMotorTarget(motorR, first_turn, 10);
+    while (abs(getMotorEncoder(motorL)) < (abs(first_turn) - 4))
+    {
+    }
+    float second_turn = correctionA * (sporviddeA * ((hojre_scan + venstre_scan) / hjul_omA));
+    resetMotorEncoder(motorL);
+    resetMotorEncoder(motorR);
+    setMotorTarget(motorL, -second_turn, 8);
+    setMotorTarget(motorR, second_turn, 8);
+    while (abs(getMotorEncoder(motorL)) < (abs(second_turn) - 4))
+    { //de minus 4 er en buffer in case motoren ikke rammer target praecis
+        if (getUSDistance(ultrasense) < old_scan_dist) //scanner for objekter tÃ¦t pÃ¥ og gemmer motorposition for nÃ¦rmest
+        {
+            scan_directionL = getMotorEncoder(motorL);
+            scan_directionR = getMotorEncoder(motorR);
+            old_scan_dist = getUSDistance(ultrasense);
+			playTone(200,5);
+        }
+    }
+    delay(5000); //sikrer den fÃ¸r
+    setMotorTarget(motorL, scan_directionL, 15);
+    setMotorTarget(motorR, scan_directionR, 15);
+    /*while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 4)||abs(getMotorEncoder(motorR)) < (abs(scan_directionR) - 4))
+    { //de minus 4 er en buffer in case motoren ikke rammer target praecis   Hovsaløsning, virker ikke efter hensigten
+    }*/
+    delay(5000);
 }
 
 // Tæller hvor mange sorte linjer robotten kører over. on/off ved count_blacks = true/false
@@ -303,6 +310,11 @@ void color_cal() //timer3
 	}
 }
 
+void ultrafilter ()
+{
+
+}
+
 task main()
 {
 	perfect_line = gray_val + ((white_val - gray_val) / 2); // Udregner den perfekte linje én gang i starten
@@ -374,6 +386,73 @@ task main()
 				}
 				if (black_counter == 3)
 				{
+					while (flaskevej == 0) // på langsiden
+					{
+						drive(20, 50);
+						dreje(90);
+						drive(10);
+						scan();
+						setMotorTarget(klomotor, klo_aaben, 100);
+						flaskevej++;
+					}
+
+					while (flaskevej == 1) // på vej
+					{
+						if (getUSDistance(ultrasense) >= 20)
+						{
+							setMotorSpeed(motorL, -10);
+							setMotorSpeed(motorR, -10);
+						}
+
+						if (getUSDistance(ultrasense) >= 8 && getUSDistance(ultrasense) < 20)
+						{
+							setMotorSpeed(motorL, -4);
+							setMotorSpeed(motorR, -4);
+						}
+						if (getUSDistance(ultrasense) < 8)
+						{
+							flaskevej++;
+						}
+					}
+
+					while (flaskevej == 2) // løfter flasken.
+					{
+						setMotorSpeed(motorL, 0);
+						setMotorSpeed(motorR, 0);
+						delay(500);
+						setMotorTarget(klomotor, klo_loeft, 50);
+						setLEDColor(ledRed);
+						delay(3000);
+						flaskevej++;
+					}
+
+					while (flaskevej == 3) // k6rer til den sorte streg og lægger flasken
+					{
+						drive(20, 30);
+						//black_counter = 4;
+						delay(2000);
+						setMotorSpeed(motorL, 0);
+						setMotorSpeed(motorR, 0);
+						//setMotorTarget(klomotor, klo_aaben, 30);
+						setLEDColor(ledGreen);
+						delay(2000);
+						flaskevej++;
+					}
+
+					while (flaskevej == 4) // kører baglæns.
+					{
+						drive(-20, 30);
+						dreje(180);
+						flaskevej++;
+					}
+
+					while (flaskevej == 5) // kører nu til langsiden
+					{
+						drive(30, 30); // husk at mål afstand
+						dreje(90);
+						flaskevej++;
+					}
+					curr_task++;
 				}
 				if (black_counter == 4)
 				{
@@ -468,6 +547,7 @@ task main()
 			{
 				if (black_counter < 7)
 				{
+					klo_cal(9000);
 					black_counter = 7;
 				}
 				if (black_counter == 7)
@@ -478,7 +558,7 @@ task main()
 				{
 					for (int i; i < 1; i++)
 					{
-						distance(20); // Følg linjen i 20 cm
+						PID_distance(22); // Følg linjen i 20 cm
 						dreje(-90); // Drej 90 grader mod den nye linje
 						setMotorTarget(klomotor, 9000, 60); // Åben kloen
 					}
@@ -488,33 +568,43 @@ task main()
 				{
 					for (int i; i < 1; i++)
 					{
-						drive(25, 20); //Kør frem til midten uden PID
-						dreje(45);	 // Drejer 45 grader mod flasken
-						resetMotorEncoder(motorA);
-						resetMotorEncoder(motorB); // reset motorencoder
-						scan(20, 20); // scan efter flaske, og peg på den
-						while (getUSDistance(ultrasense) > 7.8 && getUSDistance(ultrasense) < 70) // Imens ultrasense er mellem 7.8 og 70 cm
+						drive(60, 20); //Kør frem til midten uden PID
+						dreje(-40);	// Drejer 45 grader mod flasken
+						resetMotorEncoder(motorL);
+						resetMotorEncoder(motorR);												  // reset motorencoder
+						scan(40, 40);															  // scan efter flaske, og peg på den
+						while (getUSDistance(ultrasense) > 8 || getUSDistance(ultrasense) < 7) // Imens ultrasense er mellem 7.8 og 70 cm
 						{
 							setMotorSpeed(motorL, -20); // Kør frem
 							setMotorSpeed(motorR, -20);
 						}
-						setMotorTarget(klomotor, 0, 100); // Luk kloen
-						while (getMotorEncoder(motorL) > 0) // Imens motorencoderen er over nulpunktet
+							setMotorSpeed(motorL, 0); // Stop
+							setMotorSpeed(motorR, 0);
+						while (getMotorEncoder(klomotor) > (klo_loeft + 6)) // Lukker og løfter
+						{
+							setMotorTarget(klomotor, klo_loeft, 100); // Luk kloen
+						}
+						while (-getMotorEncoder(motorL) > 0) // Imens motorencoderen er over nulpunktet
 						{
 							setMotorTarget(motorL, 0, 20); // Kør tilbage
-							setMotorTarget(motorE, 0, 20);  
+							setMotorTarget(motorR, 0, 20);
 						}
+						setMotorSpeed(motorL, 0); // Stop
+						setMotorSpeed(motorR, 0);
 						drive(-20); // Kør yderligere 20 cm tilbage
-						setMotorTarget(klomotor, 9000, 100); // Slip flasken
-						drive(-20); // Kør yderligere 20 cm tilbage
-						dreje(-135); // drej tilbage mod banen
-						drive(-40); // Kør ud af skydeskive
+						while (getMotorEncoder(klomotor) < (klo_aaben - 6)) // Åbner kloen
+						{
+							setMotorTarget(klomotor, klo_aaben, 100); // Slip flasken
+						}
+						drive(-20);									   // Kør yderligere 20 cm tilbage
+						dreje(-180);								   // drej tilbage mod banen
+						drive(60);									   // Kør ud af skydeskive
 						while (SensorValue(colorsense) > perfect_line) // Imens sensoren læser hvid
 						{
 							setMotorSpeed(motorL, -20); // Kør frem
 							setMotorSpeed(motorR, -20);
 						}
-						drive(-20); // Kør yderligere 20 frem
+						drive(20); // Kør yderligere 20 frem
 						dreje(-90); // dreje tilbage på banen
 					}
 					curr_task++;
@@ -522,8 +612,8 @@ task main()
 			}
 			else
 			{
-				curr_task++;
-				black_counter++;
+				//curr_task++;
+				//black_counter++;
 			}
 		}
 
@@ -631,10 +721,10 @@ task main()
 					dreje(-59.36);
 					drive(12.79);
 					dreje(59.36);
-					distance(149);
+					PID_distance(149);
 					dreje(90); //drejer 90 grader
 				}
-				curr_task++
+				curr_task++;
 				// Indsæt opgave 9 loop her **********************
 			}
 			else
