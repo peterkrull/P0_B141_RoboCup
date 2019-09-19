@@ -6,7 +6,7 @@
 #pragma config(Motor, 	motorB, motorR, 	tmotorEV3_Large, 	PIDControl, encoder)
 #pragma config(Motor, 	motorC, klomotor, 	tmotorEV3_Medium, 	PIDControl, encoder)
 
-#define task1 true	// Kør af banen of skift til anden grå linje
+#define task1 true  // Kør af banen of skift til anden grå linje
 #define task2 true  // Flyt flaske bag den sorte streg
 #define task3 true  // Kør over vippe
 #define task4 true  // Find den 3. af 4 grå streger
@@ -74,6 +74,7 @@ void Linefollow_PID(bool enable_tracking, float speed = 20)
 
 		// Udregn sum af fejl : Integral
 		error_sum += errors;
+
 		// Udregn fejl delta : Differentiale
 		deltaErr = errors - prev_error;
 
@@ -190,7 +191,7 @@ void black_line_counter() //timer2
 }
 
 // Bruges til at kalibrere kloens placering
-void klo_cal(int klo_pos = 1) //timer4
+void klo_cal(int klo_pos = 4500) //timer4
 {
 	int kalibration = 0;
 	clearTimer(timer4);
@@ -304,19 +305,18 @@ void color_cal() //timer3
 
 task main()
 {
-	
 	perfect_line = gray_val + ((white_val - gray_val) / 2); // Udregner den perfekte linje én gang i starten
 	while (racedone == false) // Main loop til at køre når race endnu ikke er færdig
 	{
-		black_line_counter();
+		black_line_counter(); // Den sorte tæller kører altid, med mindre count_blacks bliver sat til false
 
-		if (curr_task == 0)
+		if (curr_task == 0) // done
 		{
 			klo_cal();   // Kloen kalibreres som det første, så vi ved hvor den er
 			color_cal(); // farvekalibrering kører i starten
 		}
 
-		if (curr_task == 1)
+		if (curr_task == 1) // done
 		{
 			if (task1 == true) // Betingelser for udførelse af opgave 1
 			{
@@ -359,7 +359,7 @@ task main()
 			}
 		}
 
-		if (curr_task == 2)
+		if (curr_task == 2) // somewhat
 		{
 
 			if (task2 == true) // Betingelser for udførelse af opgave 2 - Khadar
@@ -387,7 +387,7 @@ task main()
 			}
 		}
 
-		if (curr_task == 3)
+		if (curr_task == 3) // somewhat
 		{
 			if (task3 == true) // Betingelser for udførelse af opgave 3
 			{
@@ -403,26 +403,22 @@ task main()
 				{
 					for (int i = 0; i < 1; i++)
 					{
-						drive(20, 30);
-						dreje(-90);
+						drive(20, 30); // Kør frem til linjen
+						dreje(-90); // drej 90 grader for at komme rigtigt på næste linje
 					}
-					Linefollow_PID(true);
+					count_blacks = true;
+					Linefollow_PID(true); // følg linjen igen
 				}
 				if (black_counter == 6)
 				{
 					for (int i = 0; i < 1; i++)
 					{
-						Linefollow_PID(false);
-						drive(40, 60);
-						delay(500);
-						PID_distance(80);
-						delay(500);
-						drive(20);
-						delay(500);
-						PID_distance(32);
-						delay(500);
-						dreje(-90);
-						delay(500);
+						Linefollow_PID(false); 	// sluk for line following
+						drive(40, 60); 			// Kør HURTIGT op over rampen
+						PID_distance(80); 		// Følg rampen med PID 80
+						drive(20); 				// Kør 20 cm ned over rampen
+						PID_distance(32); 		// Tænd for PID over 32 CM
+						dreje(-90); 			// Dreje 90 grader tilbage på sporet
 					}
 					curr_task++;
 				}
@@ -435,7 +431,7 @@ task main()
 			}
 		}
 
-		if (curr_task == 4) 
+		if (curr_task == 4) // done
 		{
 			if (black_counter < 6) // Betingelser for udførelse af opgave 4
 			{
@@ -466,7 +462,7 @@ task main()
 			}
 		}
 
-		if (curr_task == 5)
+		if (curr_task == 5) // done?
 		{
 			if (task5 == true) // Betingelser for udførelse af opgave 5
 			{
@@ -476,15 +472,52 @@ task main()
 				}
 				if (black_counter == 7)
 				{
-					Linefollow_PID(true);
+					Linefollow_PID(true); // Følg linjen
 				}
-				else if (black_counter == 8)
+				if (black_counter == 8)
 				{
-					// Gør noget, når den sorte linje er opfanget
+					for (int i; i < 1; i++)
+					{
+						distance(20); // Følg linjen i 20 cm
+						dreje(-90); // Drej 90 grader mod den nye linje
+						setMotorTarget(klomotor, 9000, 60); // Åben kloen
+					}
+					Linefollow_PID(true); // følg linjen
 				}
-				else if (black_counter == 9)
+				if (black_counter == 9)
 				{
-					// Gør noget, når den ANDEN sorte linje er opfanget
+					for (int i; i < 1; i++)
+					{
+						drive(25, 20); //Kør frem til midten uden PID
+						dreje(45);	 // Drejer 45 grader mod flasken
+						resetMotorEncoder(motorA);
+						resetMotorEncoder(motorB); // reset motorencoder
+						scan(20, 20); // scan efter flaske, og peg på den
+						while (getUSDistance(ultrasense) > 7.8 && getUSDistance(ultrasense) < 70) // Imens ultrasense er mellem 7.8 og 70 cm
+						{
+							setMotorSpeed(motorL, -20); // Kør frem
+							setMotorSpeed(motorR, -20);
+						}
+						setMotorTarget(klomotor, 0, 100); // Luk kloen
+						while (getMotorEncoder(motorL) > 0) // Imens motorencoderen er over nulpunktet
+						{
+							setMotorTarget(motorL, 0, 20); // Kør tilbage
+							setMotorTarget(motorE, 0, 20);  
+						}
+						drive(-20) // Kør yderligere 20 cm tilbage
+						setMotorTarget(klomotor, 9000, 100); // Slip flasken
+						drive(-20) // Kør yderligere 20 cm tilbage
+						dreje(-135) // drej tilbage mod banen
+						drive(-40) // Kør ud af skydeskive
+						while (SensorValue(colorsense) > perfect_line) // Imens sensoren læser hvid
+						{
+							setMotorSpeed(motorL, -20); // Kør frem
+							setMotorSpeed(motorR, -20);
+						}
+						drive(-20) // Kør yderligere 20 frem
+						dreje(-90) // dreje tilbage på banen
+					}
+					curr_task++;
 				}
 			}
 			else
@@ -494,7 +527,7 @@ task main()
 			}
 		}
 
-		if (curr_task == 6 || curr_task == 8)
+		if (curr_task == 6 || curr_task == 8) // done
 		{
 			if (task6 == true && curr_task == 6 || task8 == true && curr_task == 8) // Betingelser for udførelse af opgave 6 og 8
 			{
@@ -511,7 +544,7 @@ task main()
 				{
 					Linefollow_PID(true);
 				}
-				if (black_counter == 10 || black_counter == 12)
+				else if (black_counter == 10 || black_counter == 12)
 				{
 					count_blacks = false;
 					Linefollow_PID(false);
@@ -543,7 +576,7 @@ task main()
 			}
 		}
 
-		if (curr_task == 7)
+		if (curr_task == 7) // tweaking
 		{
 
 			if (task7 == true) // Betingelser for udførelse af opgave 7
@@ -581,7 +614,7 @@ task main()
 			}
 		}
 
-		if (curr_task == 9)
+		if (curr_task == 9) // somewhat
 		{
 			if (task9 == true) // Betingelser for udførelse af opgave 9
 			{
