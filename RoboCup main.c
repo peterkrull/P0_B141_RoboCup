@@ -504,18 +504,18 @@ task main()
 							setMotorTarget(motorL, 0, 20); // Kør tilbage
 							setMotorTarget(motorE, 0, 20);  
 						}
-						drive(-20) // Kør yderligere 20 cm tilbage
+						drive(-20); // Kør yderligere 20 cm tilbage
 						setMotorTarget(klomotor, 9000, 100); // Slip flasken
-						drive(-20) // Kør yderligere 20 cm tilbage
-						dreje(-135) // drej tilbage mod banen
-						drive(-40) // Kør ud af skydeskive
+						drive(-20); // Kør yderligere 20 cm tilbage
+						dreje(-135); // drej tilbage mod banen
+						drive(-40); // Kør ud af skydeskive
 						while (SensorValue(colorsense) > perfect_line) // Imens sensoren læser hvid
 						{
 							setMotorSpeed(motorL, -20); // Kør frem
 							setMotorSpeed(motorR, -20);
 						}
-						drive(-20) // Kør yderligere 20 frem
-						dreje(-90) // dreje tilbage på banen
+						drive(-20); // Kør yderligere 20 frem
+						dreje(-90); // dreje tilbage på banen
 					}
 					curr_task++;
 				}
