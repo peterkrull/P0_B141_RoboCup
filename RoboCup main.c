@@ -632,12 +632,90 @@ task main()
 			{
 				curr_task++;
 			}
-			if (curr_task == 10)
+		}
+		
+		if (curr_task == 10) // celebrateion!
+		{
+			//Tone
+			int C = 261;
+			int Csh = 275;
+			int D = 293;
+			int Dsh = 310;
+			int E = 329;
+			int F = 348;
+			int Fsh = 370;
+			int G = 392;
+			int Gsh = 412;
+			int A = 440;
+			int Ash = 466;
+			int B = 496;
+			int C_4 = 524;
+			int Csh_4 = 555;
+			int D_4 = 590;
+			int Dsh_4 = 621;
+			int E_4 = 656;
+			int F_4 = 695;
+			int Fsh_4 = 738;
+			int G_4 = 788;
+			int Gsh_4 = 830;
+			int A_4 = 877;
+			int Ash_4 = 929;
+			int B_4 = 987;
+			int C_5 = 1054;
+			int Csh_5 = 1104;
+			int D_5 = 1188;
+			int Dsh_5 = 1251;
+			int E_5 = 1322;
+			int F_5 = 1401;
+			int Fsh_5 = 1488;
+			int G_5 = 1590;
+			int Gsh_5 = 1646;
+			int A_5 = 1770;
+			int Ash_5 = 1841;
+			int B_5 = 1995;
+			//Duration
+			int Dwhole = 50;
+			int Whole = 37;
+			int Half = 50;
+			int Quarter = 12;
+			int Eighth = 13;
+			int Sixteenth = 6;
+			int Triplets = 12;
+
+			int notes[][] = {
+				{C, Triplets},
+				{E, Triplets},
+				{G, Triplets},
+				{C_4, Triplets},
+				{E_4, Triplets},
+				{G_4, Whole},
+				{E_4, Whole},
+				{-2, Triplets},
+				{C, Triplets},
+				{Dsh, Triplets},
+				{Gsh, Triplets},
+				{C_4, Triplets},
+				{Dsh_4, Triplets},
+				{Gsh_4, Whole},
+				{Dsh_4, Whole},
+				{-2, Triplets},
+				{D, Triplets},
+				{F, Triplets},
+				{Ash, Triplets},
+				{D_4, Triplets},
+				{F_4, Triplets},
+				{Ash_4, Whole},
+				{Ash_4, Triplets},
+				{Ash_4, Triplets},
+				{Ash_4, Triplets},
+				{C_5, 130},
+			};
+			for (int i = 0; i < 26; i++) //change the "62" to the new number of notes in the piece
 			{
-				// Afspil lyd
-				// Kør rundt i cirkler
-				// �?ben og luk grappen
+				playTone(notes[i][0], notes[i][1]);
+				wait1Msec(20);
 			}
+			racedone = true;
 		}
 	}
 }
