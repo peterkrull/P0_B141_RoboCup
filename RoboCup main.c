@@ -27,7 +27,7 @@ float gray_val = 37;
 float black_val = 20;
 
 // Encoderværdien for en åben klo
-const int klo_aaben = 9000;
+const int klo_aaben = 7500;
 // Encoderværdien for en lukket klo
 const int klo_luk = 4500;
 // Encoderværdien for en løftet klo
@@ -197,7 +197,7 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
     }
     stopdrive();
     //delay(500); //test
-    while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 6)||abs(getMotorEncoder(motorL)) > (abs(scan_directionL) - 6))
+    while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 50)||abs(getMotorEncoder(motorL)) > (abs(scan_directionL) - 6))
     {
         setMotorSpeed(motorL, 10);
         setMotorSpeed(motorR, -10);
@@ -205,11 +205,34 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
     stopdrive();
 }
 
+void coinSound()
+{
+	int B_4 = 987;
+	int E_5 = 1322;
+	//Duration
+	int Whole = 37;
+	int Quarter = 12;
+
+	int notes[][] = {
+		{B_4, Whole},
+		{E_5, 74},
+	};
+
+	for (int i = 0; i < 19; i++) //change the "62" to the new number of notes in the piece
+	{
+		playTone(notes[i][0], notes[i][1]);
+		while (bSoundActive)
+			;
+		wait1Msec(20);
+	}
+}
+
 // Tæller hvor mange sorte linjer robotten kører over. on/off ved count_blacks = true/false
 void black_line_counter() //timer2
 {
 	if (time1[T2] > 3000 && SensorValue(colorsense) < black_val && SensorValue(calbutton) == 0 && count_blacks == true)
 	{
+		coinSound();
 		black_counter++;
 		clearTimer(T2);
 	}
@@ -507,6 +530,7 @@ void task2()
 {
 	if (black_counter < 2)
 	{
+		klo_cal(klo_aaben);
 		black_counter = 2;
 	}
 	if (black_counter == 2)
@@ -521,8 +545,8 @@ void task2()
 			setMotorTarget(klomotor, klo_aaben, 100);
 			drive(20, 50);
 			dreje(90);
-			PID_distance(15);
-			scan();
+			PID_distance(10);
+			scan(20,20);
 			flaskevej++;
 		}
 
@@ -549,6 +573,10 @@ void task2()
 			setMotorSpeed(motorL, 0);
 			setMotorSpeed(motorR, 0);
 			delay(500);
+			int motorlcode = getMotorEncoder(motorL);
+			int motorrcode = getMotorEncoder(motorR);
+			setMotorTarget(motorL, motorlcode - 100, 3);
+			setMotorTarget(motorR, motorrcode - 100, 3);
 			loeft_klo(); // Løft klo mens robotten står stille
 			setLEDColor(ledRed);
 			delay(3000);
@@ -571,14 +599,19 @@ void task2()
 		while (flaskevej == 4) // kører baglæns.
 		{
 			drive(-20, 30);
-			dreje(180);
+			dreje(-135);
 			flaskevej++;
 		}
 
 		while (flaskevej == 5) // kører nu til langsiden
 		{
-			drive(30, 30); // husk at mål afstand
-			dreje(90);
+			while (SensorValue(colorsense) > perfect_line)  // Imens sensoren læser hvid
+			{
+				setMotorSpeed(motorL, -20); // Kør frem
+				setMotorSpeed(motorR, -20);
+			}
+			drive(10)
+			dreje(45);
 			flaskevej++;
 		}
 		curr_task++;
@@ -634,6 +667,7 @@ void task4()
 	}
 	if (black_counter == 7)
 	{
+		PID_distance(20);
 		dreje(-45);
 		drive(26); // stod på 40 før
 		while (SensorValue(colorsense) > perfect_line)
@@ -649,7 +683,7 @@ void task5()
 {
 	if (black_counter < 7)
 	{
-		klo_cal(9000);
+		klo_cal(klo_aaben);
 		black_counter = 7;
 	}
 	if (black_counter == 7)
