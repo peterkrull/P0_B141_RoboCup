@@ -43,50 +43,47 @@ void driveSpeed(int Left, int Right);
 // Bruges til at følge en linje ved hjælp af et PID udregninger
 void Linefollow_PID(float speed = 20)
 {
-	if (enable_tracking == true)
+	// PID konstanter
+	float Kp = 0.2;
+	float Ki = 0.00001;
+	float Kd = 0.035;
+
+	// variabler brugt til PID
+	float deltaErr = 0;
+	float turn = 0;
+	float errors = 0;
+	float error_sum = 0;
+	float prev_error = 0;
+	float color_diff;
+
+	// Udregn størrelsen af fejlen : Proportionel
+	errors = dir * (SensorValue(colorsense) - perfect_line);
+
+	color_diff = (white_val - gray_val) / 2; // Udregner størrelsen af farveforskellen mellem hvid, error og grå
+	if (errors > color_diff)				 // Hvis fejlen er større end den målte hvide farve
 	{
-		// PID konstanter
-		float Kp = 0.2;
-		float Ki = 0.00001;
-		float Kd = 0.035;
-
-		// variabler brugt til PID
-		float deltaErr = 0;
-		float turn = 0;
-		float errors = 0;
-		float error_sum = 0;
-		float prev_error = 0;
-		float color_diff;
-
-		// Udregn størrelsen af fejlen : Proportionel
-		errors = dir * (SensorValue(colorsense) - perfect_line);
-
-		color_diff = (white_val - gray_val) / 2; // Udregner størrelsen af farveforskellen mellem hvid, error og grå
-		if (errors > color_diff)				 // Hvis fejlen er større end den målte hvide farve
-		{
-			errors = color_diff; // sæt fejlen lig den hvide farve
-		}
-		else if (errors < (-color_diff)) // Hvis fejlen er større end den målte grå farve
-		{
-			errors = (-color_diff); // sæt fejlen lig den grå farve
-		}
-
-		// Udregn sum af fejl : Integral
-		error_sum += errors;
-
-		// Udregn fejl delta : Differentiale
-		deltaErr = errors - prev_error;
-
-		// Game nuværende som forrige
-		prev_error = errors;
-
-		// Calculate PID
-		turn = (errors * Kp) + (error_sum * Ki) + (deltaErr * Kd);
-
-		// Set motor speed
-		setMotorSpeed(motorL, -speed - ((turn * speed) / 10));
-		setMotorSpeed(motorR, -speed + ((turn * speed) / 10));
+		errors = color_diff; // sæt fejlen lig den hvide farve
 	}
+	else if (errors < (-color_diff)) // Hvis fejlen er større end den målte grå farve
+	{
+		errors = (-color_diff); // sæt fejlen lig den grå farve
+	}
+
+	// Udregn sum af fejl : Integral
+	error_sum += errors;
+
+	// Udregn fejl delta : Differentiale
+	deltaErr = errors - prev_error;
+
+	// Game nuværende som forrige
+	prev_error = errors;
+
+	// Calculate PID
+	turn = (errors * Kp) + (error_sum * Ki) + (deltaErr * Kd);
+
+	// Set motor speed
+	setMotorSpeed(motorL, -speed - ((turn * speed) / 10));
+	setMotorSpeed(motorR, -speed + ((turn * speed) / 10));
 }
 
 // Bruges til at køre en bestemt distance med PID lonefollowing
