@@ -33,6 +33,12 @@ const int klo_luk = 4500;
 // Encoderværdien for en løftet klo
 const int klo_loeft = 0;
 
+// Sætter motorhastigheden på begge motorer
+void driveSpeed(int Left, int Right);
+{
+	setMotorSpeed(motorL, -Left);
+	setMotorSpeed(motorR, -Right);
+}
 
 // Bruges til at følge en linje ved hjælp af et PID udregninger
 void Linefollow_PID(bool enable_tracking, float speed = 20)
@@ -82,6 +88,7 @@ void Linefollow_PID(bool enable_tracking, float speed = 20)
 		setMotorSpeed(motorR, -speed + ((turn * speed) / 10));
 	}
 }
+
 // Bruges til at køre en bestemt distance med PID lonefollowing
 void PID_distance(float cm, float speed = 20)
 {
@@ -103,6 +110,7 @@ void PID_distance(float cm, float speed = 20)
 	delay(200);
 }
 
+// Funktion som stopper begge motorer
 void stopdrive()
 {
 	setMotorSpeed(motorL, 0);
@@ -205,6 +213,7 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
     stopdrive();
 }
 
+// Mario coin lyd
 void coinSound()
 {
 	int B_4 = 987;
@@ -388,6 +397,7 @@ void color_cal() //timer3
 	}
 }
 
+// Mario theme sang + nedtælling
 void introSong()
 {
 
@@ -432,6 +442,7 @@ void introSong()
 	}
 }
 
+// Musik til når banen er gennemført.
 void CelebrationMusic()
 {
 	int C = 261;
