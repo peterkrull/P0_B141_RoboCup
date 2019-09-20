@@ -106,37 +106,66 @@ void PID_distance(float cm, float speed = 20)
 // Bruges til at dreje(x) antal grader
 void dreje(float turn_degrees)
 {
+	stop();
 	float hjul_om = 5.5;												   //hjulets omkreds i cm
 	float sporvidde = 13.4;												   //sporvidde p� bilen
 	float correction = 1.032;											   //float til at lave sm� corrections p� m�ngden bilen drejer
 	float calc_turn = correction * (sporvidde * (turn_degrees / hjul_om)); //udregning af antal grader motoren skal dreje
 	resetMotorEncoder(motorL);
 	resetMotorEncoder(motorR);
-	setMotorTarget(motorL, -calc_turn, 10);
-	setMotorTarget(motorR, calc_turn, 10);
+
 	while (abs(getMotorEncoder(motorL)) < (abs(calc_turn) - 6))
-	{ //de minus 4 er en buffer in case motoren ikke rammer target pr�cis
-	} //while loopet eksisterer for at sikre at robotten er helt drejet f�r den udf�rer ny kode
+	{ 
+		if (turn_degrees > 0)
+		{
+			setMotorSpeed(motorL, 10);
+			setMotorSpeed(motorR, -10);
+		}
+		if (turn_degrees < 0)
+		{
+			setMotorSpeed(motorL, -10);
+			setMotorSpeed(motorR, 10);
+		}
+	}
+	stop();
 	delay(200);
 }
 
 // Bruges til at drive(x) antal centimeter
 void drive(float CM, int speedX = 20)
 {
+	stop();
 	float forwardT = (360 / (5.5 * PI)) * CM; //udregning af rotation i grader motoren skal køre
 	resetMotorEncoder(motorL);				  //5,5 er hjulstørrelsen
 	resetMotorEncoder(motorR);
-	setMotorTarget(motorL, -forwardT, abs(speedX));
-	setMotorTarget(motorR, -forwardT, abs(speedX));
+
 	while (abs(getMotorEncoder(motorL)) < (abs(forwardT) - 6))
-	{ //de minus 4 er en buffer in case motoren ikke rammer target pr?cis
-	} //while loopet eksisterer for at sikre at robotten er k?rt f?rdig f?r den udf?rer ny kode
+	{
+		if (CM < 0)
+		{
+			setMotorSpeed(motorL, speedX);
+			setMotorSpeed(motorR, speedX;
+		}
+		if (CM > 0)
+		{
+			setMotorSpeed(motorL, -speedX);
+			setMotorSpeed(motorR, -speedX;
+		}
+	}
+	stop();
 	delay(200);
+}
+
+void stop()
+{
+	setMotorSpeed(motorL, 0);
+	setMotorSpeed(motorR, 0;
 }
 
 // Bruges til at scanne efter en flaske på banen
 void scan(float venstre_scan = 45, float hojre_scan = 45)
 {
+	stop();
     float old_scan_dist = 256.0;
     int scan_directionL;
     int scan_directionR;
@@ -172,6 +201,7 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
     /*while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 4)||abs(getMotorEncoder(motorR)) < (abs(scan_directionR) - 4))
     { //de minus 4 er en buffer in case motoren ikke rammer target praecis   Hovsaløsning, virker ikke efter hensigten
     }*/
+	stop();
     delay(5000);
 }
 
@@ -340,26 +370,19 @@ void task1()
 	{
 		for (int i; i < 1; i++)
 		{
-			count_blacks = false;
-			Linefollow_PID(false);
 			dreje(+45);
 			drive(40);
 			dreje(-45);
-			count_blacks = true;
 		}
-
 		Linefollow_PID(true);
 	}
 	if (black_counter == 2)
 	{
 		for (int i; i < 1; i++)
 		{
-			count_blacks = false;
-			Linefollow_PID(false);
 			dreje(-45);
 			drive(30);
 			dreje(+45);
-			count_blacks = true;
 		}
 		curr_task++;
 	}
@@ -466,7 +489,6 @@ void task3()
 			drive(20, 30); // Kør frem til linjen
 			dreje(-90);	// drej 90 grader for at komme rigtigt på næste linje
 		}
-		count_blacks = true;
 		Linefollow_PID(true); // følg linjen igen
 	}
 	if (black_counter == 6)
