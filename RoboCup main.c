@@ -41,7 +41,7 @@ void driveSpeed(int Left, int Right);
 }
 
 // Bruges til at følge en linje ved hjælp af et PID udregninger
-void Linefollow_PID(bool enable_tracking, float speed = 20)
+void Linefollow_PID(float speed = 20)
 {
 	if (enable_tracking == true)
 	{
@@ -104,14 +104,13 @@ void PID_distance(float cm, float speed = 20)
 		distanceR = -getMotorEncoder(motorR);
 		distanceL = -getMotorEncoder(motorL);
 		distance = (distanceR + distanceL) / 2;
-		Linefollow_PID(true, speed); //linefollow
+		Linefollow_PID(speed); //linefollow
 	}
-	Linefollow_PID(false);
 	delay(200);
 }
 
 // Funktion som stopper begge motorer
-void stopdrive()
+void driveStop()
 {
 	setMotorSpeed(motorL, 0);
 	setMotorSpeed(motorR, 0);
@@ -120,7 +119,7 @@ void stopdrive()
 // Bruges til at dreje(x) antal grader
 void dreje(float turn_degrees)
 {
-	stopdrive();
+	driveStop();
 	float hjul_om = 5.5;												   //hjulets omkreds i cm
 	float sporvidde = 13.4;												   //sporvidde p� bilen
 	float correction = 1.032;											   //float til at lave sm� corrections p� m�ngden bilen drejer
@@ -139,14 +138,14 @@ void dreje(float turn_degrees)
 			driveSpeed(-10,10);
 		}
 	}
-	stopdrive();
+	driveStop();
 	//delay(200);
 }
 
 // Bruges til at drive(x) antal centimeter
 void drive(float CM, int speedX = 20)
 {
-	stopdrive();
+	driveStop();
 	float forwardT = (360 / (5.5 * PI)) * CM; //udregning af rotation i grader motoren skal køre
 	resetMotorEncoder(motorL);				  //5,5 er hjulstørrelsen
 	resetMotorEncoder(motorR);
@@ -162,7 +161,7 @@ void drive(float CM, int speedX = 20)
 			driveSpeed(speedX,speedX);
 		}
 	}
-	stopdrive();
+	driveStop();
 	//delay(200);
 }
 
@@ -182,7 +181,7 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
     {
         driveSpeed(-25,25);
     }
-    stopdrive();
+    driveStop();
     float second_turn = correctionA * (sporviddeA * (((hojre_scan + venstre_scan)) / hjul_omA));
     resetMotorEncoder(motorL);
     resetMotorEncoder(motorR);
@@ -197,13 +196,13 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
             old_scan_dist = getUSDistance(ultrasense);
         }
     }
-    stopdrive();
+    driveStop();
     //delay(500); //test
     while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 50)||abs(getMotorEncoder(motorL)) > (abs(scan_directionL) - 6))
     {
         driveSpeed(-10,10);
     }
-    stopdrive();
+    driveStop();
 }
 
 // Mario coin lyd
@@ -278,13 +277,13 @@ void aaben_klo()
 // Holder stille mens kloen lukkes
 void luk_klo()
 {
-	while (getMotorEncoder(klomotor) > (klo_luk + 6) || getMotorEncoder(klomotor) < (klo_luk - 6)) // Lukker
+	while (getMotorEncoder(klomotor) < (klo_luk - 6) || getMotorEncoder(klomotor) > (klo_luk + 6)) // Lukker
 	{
-		if (getMotorEncoder(klomotor) > (klo_luk-6))
+		if (getMotorEncoder(klomotor) < (klo_luk - 6))
 		{
-			setMotorSpeed(klomotor, 100); // Luk kloen
+			setMotorSpeed(klomotor, 100); // Sænk kloen
 		}
-		if (getMotorEncoder(klomotor) < (klo_luk+6))
+		else if (getMotorEncoder(klomotor) > (klo_luk + 6))
 		{
 			setMotorSpeed(klomotor, -100); // Luk kloen
 		}
@@ -507,7 +506,7 @@ void task1()
 	if (black_counter == 0)
 	{
         //luk_klo();
-		Linefollow_PID(true, 30);
+		Linefollow_PID(30);
 	}
 	if (black_counter == 1)
 	{
@@ -517,7 +516,7 @@ void task1()
 			drive(30);
 			dreje(-45);
 		}
-		Linefollow_PID(true, 30);
+		Linefollow_PID(30);
 	}
 	if (black_counter == 2)
 	{
@@ -539,7 +538,7 @@ void task2()
 	}
 	if (black_counter == 2)
 	{
-		Linefollow_PID(true,40);
+		Linefollow_PID(40);
 	}
 	if (black_counter == 3)
 	{
@@ -572,7 +571,7 @@ void task2()
 		}
 		while (flaskevej == 2) // løfter flasken.
 		{
-			stopdrive();
+			driveStop();
 			delay(500);
 			int motorlcode = getMotorEncoder(motorL);
 			int motorrcode = getMotorEncoder(motorR);
@@ -589,7 +588,7 @@ void task2()
 			drive(20, 30);
 			//black_counter = 4;
 			delay(2000);
-			stopdrive();
+			driveStop();
 			aaben_klo();
 			setLEDColor(ledGreen);
 			delay(2000);
@@ -628,7 +627,7 @@ void task3()
 	}
 	if (black_counter == 4)
 	{
-		Linefollow_PID(true);
+		Linefollow_PID();
 	}
 	if (black_counter == 5)
 	{
@@ -637,13 +636,12 @@ void task3()
 			drive(25, 30); // Kør frem til linjen
 			dreje(-90);	// drej 90 grader for at komme rigtigt på næste linje
 		}
-		Linefollow_PID(true); // følg linjen igen
+		Linefollow_PID(); // følg linjen igen
 	}
 	if (black_counter == 6)
 	{
 		for (int i; i < 1; i++)
 		{
-			Linefollow_PID(false); // sluk for line following
 			drive(50, 60);		   // Kør HURTIGT op over rampen
 			PID_distance(70);	  // Følg rampen med PID 80
 			drive(20);			   // Kør 20 cm ned over rampen
@@ -662,7 +660,7 @@ void task4()
 
 	if (black_counter == 6)
 	{
-		Linefollow_PID(true);
+		Linefollow_PID();
 	}
 	if (black_counter == 7)
 	{
@@ -686,7 +684,7 @@ void task5()
 	}
 	if (black_counter == 7)
 	{
-		Linefollow_PID(true); // Følg linjen
+		Linefollow_PID(); // Følg linjen
 	}
 	if (black_counter == 8)
 	{
@@ -696,7 +694,7 @@ void task5()
 			dreje(-90);							// Drej 90 grader mod den nye linje
 			setMotorTarget(klomotor, klo_aaben, 60); // �?ben kloen
 		}
-		Linefollow_PID(true); // følg linjen
+		Linefollow_PID(); // følg linjen
 	}
 	if (black_counter == 9)
 	{
@@ -749,7 +747,7 @@ void task6_8()
 
 	if (black_counter == 9 || black_counter == 11)
 	{
-		Linefollow_PID(true,30);
+		Linefollow_PID(30);
 	}
 	else if (black_counter == 10 || black_counter == 12)
 	{
@@ -772,7 +770,7 @@ void task6_8()
 			dreje(30);
 		}
 		
-		Linefollow_PID(true);
+		Linefollow_PID();
 		curr_task++;
 	}
 }
@@ -784,11 +782,10 @@ void task7()
 	}
 	if (black_counter == 10)
 	{
-		Linefollow_PID(true,30);
+		Linefollow_PID(30);
 	}
 	if (black_counter == 11)
 	{
-		Linefollow_PID(false);
 		for (int i; i < 1; i++)
 		{
 			//setMotorTarget(klomotor, klo_loeft, 100);
@@ -814,7 +811,7 @@ void task9()
 	}
 	if (black_counter == 12)
 	{
-		Linefollow_PID(true,30);
+		Linefollow_PID(30);
 	}
 	if (black_counter == 13)
 	{
