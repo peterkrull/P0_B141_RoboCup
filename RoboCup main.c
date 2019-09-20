@@ -165,44 +165,45 @@ void drive(float CM, int speedX = 20)
 // Bruges til at scanne efter en flaske pÃ¥ banen
 void scan(float venstre_scan = 45, float hojre_scan = 45)
 {
-	stopdrive();
     float old_scan_dist = 256.0;
     int scan_directionL;
     int scan_directionR;
     float hjul_omA = 5.5;                                                         //hjulets omkreds i cm
-    float sporviddeA = 13.4;                                                      //sporvidde pï¿½?Â¯ï¿½?Â¿ï¿½
-    float correctionA = 1;                                                        //float til at lave smï¿½?Â¯ï¿½?Â¿ï¿½?Â½ corrections pï¿½?Â¯ï¿½?Â¿ï¿½?Â½ mï¿½?ï¿½
-    float first_turn = correctionA * (sporviddeA * ((-venstre_scan) / hjul_omA)); //udregning af antal grader motoren skal dreje fï¿½?Â¯ï¿½?
+    float sporviddeA = 13.4;                                                      //sporvidde pÃ?Æ?Ã?Â¯Ã?â??Ã?Â¿Ã¯Â¿Â½
+    float correctionA = 1;                                                        //float til at lave smÃ?Æ?Ã?Â¯Ã?â??Ã?Â¿Ã?â??Ã?Â½ corrections pÃ?Æ?Ã?Â¯Ã?â??Ã?Â¿Ã?â??Ã?Â½ mÃ?Æ?Ã¯Â¿Â½
+    float first_turn = correctionA * (sporviddeA * ((-venstre_scan) / hjul_omA)); //udregning af antal grader motoren skal dreje fÃ?Æ?Ã?Â¯Ã?â??
     resetMotorEncoder(motorL);
     resetMotorEncoder(motorR);
-    setMotorTarget(motorL, -first_turn, 10);
-    setMotorTarget(motorR, first_turn, 10);
-    while (abs(getMotorEncoder(motorL)) < (abs(first_turn) - 4))
+    while (abs(getMotorEncoder(motorL)) < (abs(first_turn) - 6))
     {
+        setMotorSpeed(motorL, 10);
+        setMotorSpeed(motorR, -10);
     }
-    float second_turn = correctionA * (sporviddeA * ((hojre_scan + venstre_scan) / hjul_omA));
+    stopdrive();
+    playTone(1000, 50);
+    float second_turn = correctionA * (sporviddeA * (((hojre_scan + venstre_scan)) / hjul_omA));
     resetMotorEncoder(motorL);
     resetMotorEncoder(motorR);
-    setMotorTarget(motorL, -second_turn, 8);
-    setMotorTarget(motorR, second_turn, 8);
-    while (abs(getMotorEncoder(motorL)) < (abs(second_turn) - 4))
-    { //de minus 4 er en buffer in case motoren ikke rammer target praecis
-        if (getUSDistance(ultrasense) < old_scan_dist) //scanner for objekter tï¿½?Â¦t pï¿½?Â¥ og gemmer motorposition for nï¿½?Â¦rmest
+    while (abs(getMotorEncoder(motorL)) < (abs(second_turn) - 6))
+    {
+        setMotorSpeed(motorL, -10);
+        setMotorSpeed(motorR, 10);
+        if (getUSDistance(ultrasense) < old_scan_dist) //scanner for objekter tÃ?Æ?Ã?Â¦t pÃ?Æ?Ã?Â¥ og gemmer motorposition for nÃ?Æ?Ã?Â¦rmest
         {
+            playTone(50, 5);
             scan_directionL = getMotorEncoder(motorL);
             scan_directionR = getMotorEncoder(motorR);
             old_scan_dist = getUSDistance(ultrasense);
-			playTone(200,5);
         }
     }
-    delay(5000); //sikrer den fï¿½?Â¸r
-    setMotorTarget(motorL, scan_directionL, 15);
-    setMotorTarget(motorR, scan_directionR, 15);
-    /*while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 4)||abs(getMotorEncoder(motorR)) < (abs(scan_directionR) - 4))
-    { //de minus 4 er en buffer in case motoren ikke rammer target praecis   HovsalÃ¸sning, virker ikke efter hensigten
-    }*/
-	stopdrive();
-    delay(5000);
+    stopdrive();
+    //delay(500); //test
+    while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 6)||abs(getMotorEncoder(motorL)) > (abs(scan_directionL) - 6))
+    {
+        setMotorSpeed(motorL, 10);
+        setMotorSpeed(motorR, -10);
+    }
+    stopdrive();
 }
 
 // TÃ¦ller hvor mange sorte linjer robotten kÃ¸rer over. on/off ved count_blacks = true/false
