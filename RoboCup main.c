@@ -325,6 +325,10 @@ void color_cal() //timer3
 	}
 }
 
+//
+// Funktionerne til de individuelle opgaver.
+//
+
 void task1()
 {
 	if (black_counter == 0)
@@ -419,7 +423,7 @@ void task2()
 			delay(2000);
 			setMotorSpeed(motorL, 0);
 			setMotorSpeed(motorR, 0);
-			//setMotorTarget(klomotor, klo_aaben, 30);
+			aaben_klo();
 			setLEDColor(ledGreen);
 			delay(2000);
 			flaskevej++;
