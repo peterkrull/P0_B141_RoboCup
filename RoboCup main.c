@@ -8,8 +8,6 @@
 
 // Sættes til true når task9 er gennemført
 bool racedone = false;
-// Bruges til at tænde og slukke for tælleren af sorte linjer
-bool count_blacks = true;
 // Bruges til at holde værdien af den nuværende opgave
 int curr_task = 2;
 // Bruges til at skifte siden af linescanning
@@ -227,10 +225,10 @@ void coinSound()
 	}
 }
 
-// Tæller hvor mange sorte linjer robotten kører over. on/off ved count_blacks = true/false
+// Tæller hvor mange sorte linjer robotten kører over.
 void black_line_counter() //timer2
 {
-	if (time1[T2] > 3000 && SensorValue(colorsense) < black_val && SensorValue(calbutton) == 0 && count_blacks == true)
+	if (time1[T2] > 3000 && SensorValue(colorsense) < black_val && SensorValue(calbutton) == 0)
 	{
 		coinSound();
 		black_counter++;
@@ -838,7 +836,7 @@ task main()
 	perfect_line = gray_val + ((white_val - gray_val) / 2); // Udregner den perfekte linje én gang i starten
 	while (racedone == false)								// Main loop til at køre når race endnu ikke er færdig
 	{
-		black_line_counter(); // Den sorte tæller kører altid, med mindre count_blacks bliver sat til false
+		black_line_counter(); // Den sorte tæller kører altid, bortset fra når anden opgave udføres
 
 		if (curr_task == 0) // done
 		{
