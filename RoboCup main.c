@@ -18,6 +18,8 @@ int dir = -1;
 int black_counter = 0;
 // variabel til at holde information om den kalibrerede linje
 float perfect_line;
+// Holder styr på om kloen er kalibreret
+bool klo_kalibreret = false;
 
 // Variabel til værdien af den hvide del af banen
 float white_val = 64;
@@ -239,9 +241,8 @@ void black_line_counter() //timer2
 // Bruges til at kalibrere kloens placering
 void klo_cal(int klo_pos = 4500) //timer4
 {
-	int kalibration = 0;
 	clearTimer(timer4);
-	while (kalibration == 0)
+	while (klo_kalibreret == false)
 	{
 		while (time1[timer4] < 500)
 		{
@@ -256,7 +257,7 @@ void klo_cal(int klo_pos = 4500) //timer4
 			while (getMotorEncoder(klomotor) < klo_pos - 4)
 			{
 			}
-			kalibration = 1;
+			klo_kalibreret == true;
 		}
 	}
 }
@@ -530,7 +531,8 @@ void task2()
 {
 	if (black_counter < 2)
 	{
-		klo_cal(klo_aaben);
+		if (klo_kalibreret == false){
+		klo_cal(klo_aaben);}
 		black_counter = 2;
 	}
 	if (black_counter == 2)
@@ -676,7 +678,8 @@ void task5()
 {
 	if (black_counter < 7)
 	{
-		klo_cal(klo_aaben);
+		if (klo_kalibreret == false){
+		klo_cal(klo_aaben);}
 		black_counter = 7;
 	}
 	if (black_counter == 7)
