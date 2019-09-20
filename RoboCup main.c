@@ -169,9 +169,9 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
     int scan_directionL;
     int scan_directionR;
     float hjul_omA = 5.5;                                                         //hjulets omkreds i cm
-    float sporviddeA = 13.4;                                                      //sporvidde pÃ?Æ?Ã?Â¯Ã?â??Ã?Â¿Ã¯Â¿Â½
-    float correctionA = 1;                                                        //float til at lave smÃ?Æ?Ã?Â¯Ã?â??Ã?Â¿Ã?â??Ã?Â½ corrections pÃ?Æ?Ã?Â¯Ã?â??Ã?Â¿Ã?â??Ã?Â½ mÃ?Æ?Ã¯Â¿Â½
-    float first_turn = correctionA * (sporviddeA * ((-venstre_scan) / hjul_omA)); //udregning af antal grader motoren skal dreje fÃ?Æ?Ã?Â¯Ã?â??
+    float sporviddeA = 13.4;                                                      //sporvidde pï¿½?ï¿½?ï¿½?Â¯ï¿½?ï¿½??ï¿½?Â¿Ã¯Â¿Â½
+    float correctionA = 1;                                                        //float til at lave smï¿½?ï¿½?ï¿½?Â¯ï¿½?ï¿½??ï¿½?Â¿ï¿½?ï¿½??ï¿½?Â½ corrections pï¿½?ï¿½?ï¿½?Â¯ï¿½?ï¿½??ï¿½?Â¿ï¿½?ï¿½??ï¿½?Â½ mï¿½?ï¿½?Ã¯Â¿Â½
+    float first_turn = correctionA * (sporviddeA * ((-venstre_scan) / hjul_omA)); //udregning af antal grader motoren skal dreje fï¿½?ï¿½?ï¿½?Â¯ï¿½?ï¿½??
     resetMotorEncoder(motorL);
     resetMotorEncoder(motorR);
     while (abs(getMotorEncoder(motorL)) < (abs(first_turn) - 6))
@@ -188,7 +188,7 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
     {
         setMotorSpeed(motorL, -10);
         setMotorSpeed(motorR, 10);
-        if (getUSDistance(ultrasense) < old_scan_dist) //scanner for objekter tÃ?Æ?Ã?Â¦t pÃ?Æ?Ã?Â¥ og gemmer motorposition for nÃ?Æ?Ã?Â¦rmest
+        if (getUSDistance(ultrasense) < old_scan_dist) //scanner for objekter tï¿½?ï¿½?ï¿½?Â¦t pï¿½?ï¿½?ï¿½?Â¥ og gemmer motorposition for nï¿½?ï¿½?ï¿½?Â¦rmest
         {
             playTone(50, 5);
             scan_directionL = getMotorEncoder(motorL);
@@ -353,6 +353,50 @@ void color_cal() //timer3
 			curr_task++;
 			color_cal = false;
 		}
+	}
+}
+
+void introSong()
+{
+
+	int G = 392;
+	int A = 440;
+	int C_4 = 524;
+	int E_4 = 656;
+	int A_4 = 877;
+	int G_4 = 788;
+	//Duration
+	int Whole = 37;
+	int Quarter = 12;
+
+	int notes[][] = {
+		{E_4, Quarter},
+		{E_4, Quarter},
+		{-2, Quarter},
+		{E_4, Quarter},
+		{-2, Quarter},
+		{C_4, Quarter},
+		{E_4, Quarter},
+		{-2, Quarter},
+		{G_4, 40},
+		{-2, Quarter},
+		{G, 40},
+		{-2, Whole},
+		{A, 60},
+		{-2, Quarter},
+		{A, 60},
+		{-2, Quarter},
+		{A, 60},
+		{-2, Quarter},
+		{A_4, 80},
+	};
+
+	for (int i = 0; i < 19; i++) //change the "62" to the new number of notes in the piece
+	{
+		playTone(notes[i][0], notes[i][1]);
+		while (bSoundActive)
+			;
+		wait1Msec(20);
 	}
 }
 
@@ -791,6 +835,7 @@ task main()
 
 		if (curr_task == 1) // done
 		{
+			introSong();
 			task1();
 		}
 
