@@ -391,23 +391,22 @@ void task2()
 				setMotorSpeed(motorR, -10);
 			}
 
-			if (getUSDistance(ultrasense) >= 8 && getUSDistance(ultrasense) < 20)
+			if (getUSDistance(ultrasense) >= 8 && getUSDistance(ultrasense) < 20 || getUSDistance(ultrasense) < 7)
 			{
 				setMotorSpeed(motorL, -4);
 				setMotorSpeed(motorR, -4);
 			}
-			if (getUSDistance(ultrasense) < 8)
+			if (getUSDistance(ultrasense) < 8 && getUSDistance(ultrasense) >= 7)
 			{
 				flaskevej++;
 			}
 		}
-
 		while (flaskevej == 2) // løfter flasken.
 		{
 			setMotorSpeed(motorL, 0);
 			setMotorSpeed(motorR, 0);
 			delay(500);
-			setMotorTarget(klomotor, klo_loeft, 50);
+			loeft_klo(); // Løft klo mens robotten står stille
 			setLEDColor(ledRed);
 			delay(3000);
 			flaskevej++;
