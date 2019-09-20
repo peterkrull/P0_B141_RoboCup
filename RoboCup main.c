@@ -603,6 +603,7 @@ void task2()
 
 		while (flaskevej == 5) // kører nu til langsiden
 		{
+			setMotorTarget(klomotor, klo_luk, 100);
 			while (SensorValue(colorsense) > perfect_line)  // Imens sensoren læser hvid
 			{
 				driveSpeed(20,20);
