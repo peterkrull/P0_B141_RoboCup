@@ -702,7 +702,7 @@ void task5()
 		for (int i; i < 1; i++)
 		{
 			drive(60, 20); //Kør frem til midten uden PID											   // reset motorencoder
-			scan(80, 40);	
+			scan(70, 30);	
 			resetMotorEncoder(motorL);
 			resetMotorEncoder(motorR);										   // scan efter flaske, og peg på den
 			while (getUSDistance(ultrasense) > 8.5 || getUSDistance(ultrasense) < 7) // Imens ultrasense er mellem 7.8 og 70 cm
@@ -721,16 +721,17 @@ void task5()
             }
             drive(-22);										// Kør yderligere 20 cm tilbage
 			aaben_klo();                                    // Kloen åbnes og flasken stilles
-			drive(-20);									    // Kør yderligere 20 cm tilbage
-			dreje(-180);
-			setMotorTarget(klomotor, klo_loeft, 100);								    // drej tilbage mod banen
-			drive(50);									    // Kør ud af skydeskive
+			drive(-30);									    // Kør yderligere 20 cm tilbage
+			dreje(-90);
+			setMotorTarget(klomotor, klo_loeft, 100);		// drej tilbage mod banen									    // Kør ud af skydeskive
 			while (SensorValue(colorsense) > perfect_line)  // Imens sensoren læser hvid
 			{
 				driveSpeed(20,20);
 			}
-			drive(10);  // Kør yderligere 20 frem
+			drive(30);  // Kør yderligere 20 frem
 			dreje(-45); // dreje tilbage på banen
+			PID_distance(30);
+			dreje(-90)
 		}
 		curr_task++;
 	}
