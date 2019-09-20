@@ -10,8 +10,6 @@
 bool racedone = false;
 // Bruges til at holde værdien af den nuværende opgave
 int curr_task = 2;
-// Bruges til at skifte siden af linescanning
-int dir = -1;
 // Bruges til at holde styr på antallet af krydsede sorte linjer
 int black_counter = 0;
 // variabel til at holde information om den kalibrerede linje
@@ -34,14 +32,14 @@ const int klo_luk = 4500;
 const int klo_loeft = 0;
 
 // Sætter motorhastigheden på begge motorer
-void driveSpeed(int Left, int Right);
+void driveSpeed(int Left, int Right)
 {
 	setMotorSpeed(motorL, -Left);
 	setMotorSpeed(motorR, -Right);
 }
 
 // Bruges til at følge en linje ved hjælp af et PID udregninger
-void Linefollow_PID(float speed = 20)
+void Linefollow_PID(float speed = 20, bool followright = true)
 {
 	// PID konstanter
 	float Kp = 0.2;
@@ -55,6 +53,12 @@ void Linefollow_PID(float speed = 20)
 	float error_sum = 0;
 	float prev_error = 0;
 	float color_diff;
+	int dir;
+
+	if (followright == true)
+		{dir = -1;}
+	if (followright == false)
+		{dir = 1;}
 
 	// Udregn størrelsen af fejlen : Proportionel
 	errors = dir * (SensorValue(colorsense) - perfect_line);
@@ -209,7 +213,6 @@ void coinSound()
 	int E_5 = 1322;
 	//Duration
 	int Whole = 37;
-	int Quarter = 12;
 
 	int notes[][] = {
 		{B_4, Whole},
@@ -220,7 +223,6 @@ void coinSound()
 	{
 		playTone(notes[i][0], notes[i][1]);
 		while (bSoundActive)
-			;
 		wait1Msec(20);
 	}
 }
@@ -255,7 +257,7 @@ void klo_cal(int klo_pos = 4500) //timer4
 			while (getMotorEncoder(klomotor) < klo_pos - 4)
 			{
 			}
-			klo_kalibreret == true;
+			klo_kalibreret = true;
 		}
 	}
 }
@@ -425,7 +427,6 @@ void introSong()
 	{
 		playTone(notes[i][0], notes[i][1]);
 		while (bSoundActive)
-			;
 		wait1Msec(20);
 	}
 }
@@ -451,7 +452,6 @@ void CelebrationMusic()
 	int Ash_4 = 929;
 	int C_5 = 1054;
 	//Duration
-	int Dwhole = 50;
 	int Whole = 37;
 	int Triplets = 12;
 
@@ -488,7 +488,6 @@ void CelebrationMusic()
 	{
 		playTone(notes[i][0], notes[i][1]);
 		while (bSoundActive)
-			;
 		wait1Msec(20);
 	}
 }
@@ -606,7 +605,7 @@ void task2()
 			{
 				driveSpeed(20,20);
 			}
-			drive(10)
+			drive(10);
 			dreje(45);
 			flaskevej++;
 		}
@@ -729,7 +728,7 @@ void task5()
 			drive(30);  // Kør yderligere 20 frem
 			dreje(-45); // dreje tilbage på banen
 			PID_distance(30);
-			dreje(-90)
+			dreje(-90);
 		}
 		curr_task++;
 	}
@@ -841,7 +840,7 @@ task main()
 		if (curr_task == 0) // done
 		{
 			klo_cal();   // Kloen kalibreres som det første, så vi ved hvor den er
-			//color_cal(); // farvekalibrering kører i starten
+			color_cal(); // farvekalibrering kører i starten
 			introSong();
 			curr_task++;
 		}
