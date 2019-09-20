@@ -132,13 +132,11 @@ void dreje(float turn_degrees)
 	{
 		if (turn_degrees > 0)
 		{
-			setMotorSpeed(motorL, -10);
-			setMotorSpeed(motorR, 10);
+			driveSpeed(10,-10);
 		}
 		if (turn_degrees < 0)
 		{
-			setMotorSpeed(motorL, 10);
-			setMotorSpeed(motorR, -10);
+			driveSpeed(-10,10);
 		}
 	}
 	stopdrive();
@@ -157,13 +155,11 @@ void drive(float CM, int speedX = 20)
 	{
 		if (CM < 0)
 		{
-			setMotorSpeed(motorL, speedX);
-			setMotorSpeed(motorR, speedX);
+			driveSpeed(-speedX,-speedX);
 		}
 		if (CM > 0)
 		{
-			setMotorSpeed(motorL, -speedX);
-			setMotorSpeed(motorR, -speedX);
+			driveSpeed(speedX,speedX);
 		}
 	}
 	stopdrive();
@@ -184,8 +180,7 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
     resetMotorEncoder(motorR);
     while (abs(getMotorEncoder(motorL)) < (abs(first_turn) - 6))
     {
-        setMotorSpeed(motorL, 25);
-        setMotorSpeed(motorR, -25);
+        driveSpeed(-25,25);
     }
     stopdrive();
     float second_turn = correctionA * (sporviddeA * (((hojre_scan + venstre_scan)) / hjul_omA));
@@ -193,8 +188,7 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
     resetMotorEncoder(motorR);
     while (abs(getMotorEncoder(motorL)) < (abs(second_turn) - 6))
     {
-        setMotorSpeed(motorL, -5);
-        setMotorSpeed(motorR, 5);
+        driveSpeed(5,-5);
         if (getUSDistance(ultrasense) < old_scan_dist) //scanner for objekter t�?�?�?¦t p�?�?�?¥ og gemmer motorposition for n�?�?�?¦rmest
         {
             playTone(50, 5);
@@ -207,8 +201,7 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
     //delay(500); //test
     while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 50)||abs(getMotorEncoder(motorL)) > (abs(scan_directionL) - 6))
     {
-        setMotorSpeed(motorL, 10);
-        setMotorSpeed(motorR, -10);
+        driveSpeed(-10,10);
     }
     stopdrive();
 }
@@ -565,14 +558,12 @@ void task2()
 		{
 			if (getUSDistance(ultrasense) >= 20)
 			{
-				setMotorSpeed(motorL, -10);
-				setMotorSpeed(motorR, -10);
+				driveSpeed(10,10);
 			}
 
 			if (getUSDistance(ultrasense) >= 8.5 && getUSDistance(ultrasense) < 20 || getUSDistance(ultrasense) < 7)
 			{
-				setMotorSpeed(motorL, -4);
-				setMotorSpeed(motorR, -4);
+				driveSpeed(4,4);
 			}
 			if (getUSDistance(ultrasense) < 8.5 && getUSDistance(ultrasense) >= 7)
 			{
@@ -581,8 +572,7 @@ void task2()
 		}
 		while (flaskevej == 2) // løfter flasken.
 		{
-			setMotorSpeed(motorL, 0);
-			setMotorSpeed(motorR, 0);
+			stopdrive();
 			delay(500);
 			int motorlcode = getMotorEncoder(motorL);
 			int motorrcode = getMotorEncoder(motorR);
@@ -599,8 +589,7 @@ void task2()
 			drive(20, 30);
 			//black_counter = 4;
 			delay(2000);
-			setMotorSpeed(motorL, 0);
-			setMotorSpeed(motorR, 0);
+			stopdrive();
 			aaben_klo();
 			setLEDColor(ledGreen);
 			delay(2000);
@@ -618,8 +607,7 @@ void task2()
 		{
 			while (SensorValue(colorsense) > perfect_line)  // Imens sensoren læser hvid
 			{
-				setMotorSpeed(motorL, -20); // Kør frem
-				setMotorSpeed(motorR, -20);
+				driveSpeed(20,20);
 			}
 			drive(10)
 			dreje(45);
@@ -683,8 +671,7 @@ void task4()
 		drive(26); // stod på 40 før
 		while (SensorValue(colorsense) > perfect_line)
 		{
-			setMotorSpeed(motorR, 20);
-			setMotorSpeed(motorL, 20);
+			driveSpeed(-20,-20);
 		}
 		dreje(+45);
 		curr_task++;
@@ -721,8 +708,7 @@ void task5()
 			resetMotorEncoder(motorR);										   // scan efter flaske, og peg på den
 			while (getUSDistance(ultrasense) > 8.5 || getUSDistance(ultrasense) < 7) // Imens ultrasense er mellem 7.8 og 70 cm
 			{	
-				setMotorSpeed(motorL, -20); // Kør frem
-				setMotorSpeed(motorR, -20);
+				driveSpeed(20,20);
 			}
 			int motorlcode = getMotorEncoder(motorL);
 			int motorrcode = getMotorEncoder(motorR);
@@ -732,8 +718,7 @@ void task5()
 
             while (getMotorEncoder(motorL) < 0)            // Imens motorencoderen er over nulpunktet
             {
-                setMotorSpeed(motorL, 20);              // Kør tilbage
-                setMotorSpeed(motorR, 20);
+                driveSpeed(-20,-20);
             }
             drive(-22);										// Kør yderligere 20 cm tilbage
 			aaben_klo();                                    // Kloen åbnes og flasken stilles
@@ -743,8 +728,7 @@ void task5()
 			drive(50);									    // Kør ud af skydeskive
 			while (SensorValue(colorsense) > perfect_line)  // Imens sensoren læser hvid
 			{
-				setMotorSpeed(motorL, -20); // Kør frem
-				setMotorSpeed(motorR, -20);
+				driveSpeed(20,20);
 			}
 			drive(10);  // Kør yderligere 20 frem
 			dreje(-45); // dreje tilbage på banen
@@ -775,8 +759,7 @@ void task6_8()
 		clearTimer(T1);
 		while (SensorValue(colorsense) > perfect_line || time1[T1] < 2000)
 		{
-			setMotorSpeed(motorR, -28);
-			setMotorSpeed(motorL, -20);
+			driveSpeed(20,28);
 		}
 		if (curr_task == 6)
 		{
@@ -815,8 +798,7 @@ void task7()
 			clearTimer(timer3);
 			while (time1[timer3] < 3100)
 			{
-				setMotorSpeed(motorR, -24);
-				setMotorSpeed(motorL, -38);
+				driveSpeed(38,24);
 			}
 			dreje(-50);
 			drive(30);
