@@ -117,6 +117,13 @@ void driveStop()
 	setMotorSpeed(motorR, 0);
 }
 
+//resetter motorencoderne på begge motorer
+void resetME()
+{
+    resetMotorEncoder(motorL);
+    resetMotorEncoder(motorR);
+}
+
 // Bruges til at dreje(x) antal grader
 void dreje(float turn_degrees)
 {
@@ -166,46 +173,58 @@ void drive(float CM, int speedX = 20)
 	//delay(200);
 }
 
-// Bruges til at scanne efter en flaske på banen
+//scanner til x grader venstre og y grader hoejre. I V3 scanner den twice og finder position ud fra det
 void scan(float venstre_scan = 45, float hojre_scan = 45)
 {
-    float old_scan_dist = 256.0;
-    int scan_directionL;
-    int scan_directionR;
+    float old_scan_dist0 = 256.0; //old_scan_dist og scan_direction gemmer distancen af tingen der er tættest paa
+    float old_scan_dist1 = 256.0; // og gemmer hjulenes position ved den retning
+    int scan_directionL0;
+    int scan_directionR0;
+    int scan_directionL1;
+    int scan_directionR1;
     float hjul_omA = 5.5;                                                         //hjulets omkreds i cm
-    float sporviddeA = 13.4;                                                      //sporvidde p�?�?�?¯�?�??�?¿ï¿½
-    float correctionA = 1;                                                        //float til at lave sm�?�?�?¯�?�??�?¿�?�??�?½ corrections p�?�?�?¯�?�??�?¿�?�??�?½ m�?�?ï¿½
-    float first_turn = correctionA * (sporviddeA * ((-venstre_scan) / hjul_omA)); //udregning af antal grader motoren skal dreje f�?�?�?¯�?�??
-    resetMotorEncoder(motorL);
-    resetMotorEncoder(motorR);
-    while (abs(getMotorEncoder(motorL)) < (abs(first_turn) - 6))
-    {
-        driveSpeed(-25,25);
-    }
+    float sporviddeA = 13.4;                                                      //sporvidde paa robot
+    float correctionA = 1;                                                        //float til at lave smaa corrections in case vi ændrer robottens konstruktion
+    float first_turn = correctionA * (sporviddeA * ((-venstre_scan) / hjul_omA)); //udregning af antal grader motoren skal dreje foerste gange
+    resetME();
+    while (abs(getMotorEncoder(motorL)) < (abs(first_turn) - 6)) //sving til x antal grader venstre før scan
+    {                                                            //vi lader i disse typer while loops
+        driveSpeed(-25, 25);                                     //motorerne koere indtil de har naaet oensket pos
+    }                                                            //de -6 er en buffer incase motoren ikke rammer den praecise pos
     driveStop();
-    float second_turn = correctionA * (sporviddeA * (((hojre_scan + venstre_scan)) / hjul_omA));
-    resetMotorEncoder(motorL);
-    resetMotorEncoder(motorR);
+    float second_turn = correctionA * (sporviddeA * (((hojre_scan + venstre_scan)) / hjul_omA)); //udregning af antal grader motoren skal dreje anden gange
+    resetME();
     while (abs(getMotorEncoder(motorL)) < (abs(second_turn) - 6))
     {
-        driveSpeed(5,-5);
-        if (getUSDistance(ultrasense) < old_scan_dist) //scanner for objekter t�?�?�?¦t p�?�?�?¥ og gemmer motorposition for n�?�?�?¦rmest
+        driveSpeed(5, -5);
+        if (getUSDistance(ultrasense) < old_scan_dist0) //scanner for objekter hoejre om og gemmer motorpos 0
         {
-            playTone(50, 5);
-            scan_directionL = getMotorEncoder(motorL);
-            scan_directionR = getMotorEncoder(motorR);
-            old_scan_dist = getUSDistance(ultrasense);
+            playTone(50, 5); //lyd til at verify den finder flasken. Not necessary
+            scan_directionL0 = getMotorEncoder(motorL);
+            scan_directionR0 = getMotorEncoder(motorR);
+            old_scan_dist0 = getUSDistance(ultrasense);
         }
     }
     driveStop();
-    //delay(500); //test
-    while (abs(getMotorEncoder(motorL)) < (abs(scan_directionL) - 50)||abs(getMotorEncoder(motorL)) > (abs(scan_directionL) - 6))
+    while (abs(getMotorEncoder(motorL)) > 6) //scanner for objekter venstre om og gemmer motorpos 1
     {
-        driveSpeed(-10,10);
+        driveSpeed(-5, 5);
+        if (getUSDistance(ultrasense) < old_scan_dist1)
+        {
+            playTone(50, 5); //lyd til at verify den finder flasken. Not necessary
+            scan_directionL1 = getMotorEncoder(motorL);
+            scan_directionR1 = getMotorEncoder(motorR);
+            old_scan_dist1 = getUSDistance(ultrasense);
+        }
+    }
+    driveStop();
+    float scanGNS = (scan_directionL0 + scan_directionL1) / 2; //gennemsnit af de to motorpos
+    while (abs(getMotorEncoder(motorL)) < (abs(scanGNS) - 6))  //drejer til gennemsnitpos
+    {
+        driveSpeed(10, -10);
     }
     driveStop();
 }
-
 // Mario coin lyd
 void coinSound()
 {
@@ -239,7 +258,7 @@ void black_line_counter() //timer2
 }
 
 // Bruges til at kalibrere kloens placering
-void klo_cal(int klo_pos = 4500) //timer4
+void klo_cal(int klo_pos = klo_luk) //timer4
 {
 	clearTimer(timer4);
 	while (klo_kalibreret == false)
@@ -640,7 +659,13 @@ void task3()
 		for (int i; i < 1; i++)
 		{
 			drive(50, 60);		   // Kør HURTIGT op over rampen
-			PID_distance(70);	  // Følg rampen med PID 80
+			PID_distance(40);	  // Følg rampen med PID i 40 cm
+			while (SensorValue(colorsense) > (gray_val - 5)) // Indtil sensoren ser mørk, følg linjen.
+			{
+				Linefollow_PID();
+			}
+			driveStop();
+			delay(1000);
 			drive(20);			   // Kør 20 cm ned over rampen
 			PID_distance(55);	  // Tænd for PID over 32 CM
 			dreje(-90);			   // Dreje 90 grader tilbage på sporet
