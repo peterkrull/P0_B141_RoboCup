@@ -9,7 +9,7 @@
 // Sættes til true når task9 er gennemført
 bool racedone = false;
 // Bruges til at holde værdien af den nuværende opgave
-int curr_task = 2;
+int curr_task = 5;
 // Bruges til at holde styr på antallet af krydsede sorte linjer
 int black_counter = 0;
 // variabel til at holde information om den kalibrerede linje
@@ -18,7 +18,7 @@ float perfect_line;
 bool klo_kalibreret = false;
 
 // Variabel til værdien af den hvide del af banen
-float white_val = 64;
+float white_val = 60;
 // Variabel til værdien af den grå del af banen
 float gray_val = 37;
 // Variabel til værdien af den sorte del af banen
@@ -36,6 +36,16 @@ void driveSpeed(int Left, int Right)
 {
 	setMotorSpeed(motorL, -Left);
 	setMotorSpeed(motorR, -Right);
+}
+
+int ultrafilter(int count = 50)
+{
+	int sum = 0;
+	for (int i = 0; i < count ; i++)
+	{
+		sum = sum + getUSDistance(ultrasense);
+	}
+	return sum / count;
 }
 
 // Bruges til at følge en linje ved hjælp af et PID udregninger
@@ -174,7 +184,7 @@ void drive(float CM, int speedX = 20)
 }
 
 //scanner til x grader venstre og y grader hoejre. I V3 scanner den twice og finder position ud fra det
-void scan(float venstre_scan = 45, float hojre_scan = 45)
+void scan(float venstre_scan = 45, float hojre_scan = 45, float min_dist = 7) //min dist er distancen genstanden mindst skal vaere vaek for at blive registreret
 {
     float old_scan_dist0 = 256.0; //old_scan_dist og scan_direction gemmer distancen af tingen der er tættest paa
     float old_scan_dist1 = 256.0; // og gemmer hjulenes position ved den retning
@@ -197,29 +207,29 @@ void scan(float venstre_scan = 45, float hojre_scan = 45)
     while (abs(getMotorEncoder(motorL)) < (abs(second_turn) - 6))
     {
         driveSpeed(5, -5);
-        if (getUSDistance(ultrasense) < old_scan_dist0) //scanner for objekter hoejre om og gemmer motorpos 0
+        if (ultrafilter() < old_scan_dist0 && ultrafilter() > min_dist) //scanner for objekter hoejre om og gemmer motorpos 0
         {
             playTone(50, 5); //lyd til at verify den finder flasken. Not necessary
             scan_directionL0 = getMotorEncoder(motorL);
             scan_directionR0 = getMotorEncoder(motorR);
-            old_scan_dist0 = getUSDistance(ultrasense);
+            old_scan_dist0 = ultrafilter();
         }
     }
     driveStop();
     while (abs(getMotorEncoder(motorL)) > 6) //scanner for objekter venstre om og gemmer motorpos 1
     {
         driveSpeed(-5, 5);
-        if (getUSDistance(ultrasense) < old_scan_dist1)
+        if (ultrafilter() < old_scan_dist1 && ultrafilter() > min_dist)
         {
             playTone(50, 5); //lyd til at verify den finder flasken. Not necessary
             scan_directionL1 = getMotorEncoder(motorL);
             scan_directionR1 = getMotorEncoder(motorR);
-            old_scan_dist1 = getUSDistance(ultrasense);
+            old_scan_dist1 = ultrafilter();
         }
     }
     driveStop();
     float scanGNS = (scan_directionL0 + scan_directionL1) / 2; //gennemsnit af de to motorpos
-    while (abs(getMotorEncoder(motorL)) < (abs(scanGNS) - 6))  //drejer til gennemsnitpos
+    while (abs(getMotorEncoder(motorL)) < (abs(scanGNS)+3))  //drejer til gennemsnitpos
     {
         driveSpeed(10, -10);
     }
@@ -251,7 +261,7 @@ void black_line_counter() //timer2
 {
 	if (time1[T2] > 3000 && SensorValue(colorsense) < black_val && SensorValue(calbutton) == 0)
 	{
-		coinSound();
+		//coinSound();
 		black_counter++;
 		clearTimer(T2);
 	}
@@ -511,6 +521,8 @@ void CelebrationMusic()
 	}
 }
 
+
+
 //
 // Funktionerne til de individuelle opgaver.
 //
@@ -547,8 +559,7 @@ void task2()
 {
 	if (black_counter < 2)
 	{
-		if (klo_kalibreret == false){
-		klo_cal(klo_aaben);}
+		
 		black_counter = 2;
 	}
 	if (black_counter == 2)
@@ -556,7 +567,15 @@ void task2()
 		Linefollow_PID(40);
 	}
 	if (black_counter == 3)
-	{
+	{	
+		for (int i; i < 1; i++)
+		{
+			if (klo_kalibreret == false)
+			{
+				driveStop();
+				klo_cal(klo_aaben);
+			}
+		}
 		int flaskevej = 0;
 		while (flaskevej == 0) // på langsiden
 		{
@@ -658,7 +677,7 @@ void task3()
 	{
 		for (int i; i < 1; i++)
 		{
-			drive(50, 60);		   // Kør HURTIGT op over rampen
+			drive(50, 75);		   // Kør HURTIGT op over rampen
 			PID_distance(40);	  // Følg rampen med PID i 40 cm
 			while (SensorValue(colorsense) > (gray_val - 5)) // Indtil sensoren ser mørk, følg linjen.
 			{
@@ -667,7 +686,8 @@ void task3()
 			driveStop();
 			delay(1000);
 			drive(20);			   // Kør 20 cm ned over rampen
-			PID_distance(55);	  // Tænd for PID over 32 CM
+			PID_distance(30);	  // Tænd for PID over 32 CM
+			drive(15);
 			dreje(-90);			   // Dreje 90 grader tilbage på sporet
 		}
 		curr_task++;
@@ -686,14 +706,15 @@ void task4()
 	}
 	if (black_counter == 7)
 	{
-		PID_distance(20);
+		PID_distance(40);
 		dreje(-45);
 		drive(26); // stod på 40 før
 		while (SensorValue(colorsense) > perfect_line)
 		{
 			driveSpeed(-20,-20);
 		}
-		dreje(+45);
+		drive(8);
+		dreje(+40);
 		curr_task++;
 	}
 }
@@ -701,20 +722,23 @@ void task5()
 {
 	if (black_counter < 7)
 	{
-		if (klo_kalibreret == false){
-		klo_cal(klo_aaben);}
 		black_counter = 7;
 	}
 	if (black_counter == 7)
 	{
-		Linefollow_PID(); // Følg linjen
+		Linefollow_PID(30); // Følg linjen
 	}
 	if (black_counter == 8)
 	{
 		for (int i; i < 1; i++)
 		{
-			PID_distance(22);					// Følg linjen i 20 cm
-			dreje(-90);							// Drej 90 grader mod den nye linje
+			if (klo_kalibreret == false)
+			{
+				driveStop();
+				klo_cal(klo_aaben);
+			}
+			PID_distance(22);						 // Følg linjen i 20 cm
+			dreje(-90);								 // Drej 90 grader mod den nye linje
 			setMotorTarget(klomotor, klo_aaben, 60); // �?ben kloen
 		}
 		Linefollow_PID(); // følg linjen
@@ -724,35 +748,38 @@ void task5()
 		for (int i; i < 1; i++)
 		{
 			drive(60, 20); //Kør frem til midten uden PID											   // reset motorencoder
-			scan(70, 30);	
+			dreje(-40);
+			delay(2000);
+			scan(35, 35 ,25);
 			resetMotorEncoder(motorL);
-			resetMotorEncoder(motorR);										   // scan efter flaske, og peg på den
-			while (getUSDistance(ultrasense) > 8.5 || getUSDistance(ultrasense) < 7) // Imens ultrasense er mellem 7.8 og 70 cm
-			{	
-				driveSpeed(20,20);
+			resetMotorEncoder(motorR);												 // scan efter flaske, og peg på den
+			while (ultrafilter(20) > 8.5 || ultrafilter(20) < 7) // Imens ultrasense er mellem 7.8 og 70 cm
+			{
+				driveSpeed(20, 20);
 			}
 			int motorlcode = getMotorEncoder(motorL);
 			int motorrcode = getMotorEncoder(motorR);
-			setMotorTarget(motorL, motorlcode - 100, 5);
-			setMotorTarget(motorR, motorrcode - 100, 5);
-            loeft_klo(); // Kloen lukker og løfter flasken
+			setMotorTarget(motorL, motorlcode - 100, 4);
+			setMotorTarget(motorR, motorrcode - 100, 4);
+			loeft_klo(); // Kloen lukker og løfter flasken
 
-            while (getMotorEncoder(motorL) < 0)            // Imens motorencoderen er over nulpunktet
-            {
-                driveSpeed(-20,-20);
-            }
-            drive(-22);										// Kør yderligere 20 cm tilbage
-			aaben_klo();                                    // Kloen åbnes og flasken stilles
-			drive(-30);									    // Kør yderligere 20 cm tilbage
-			dreje(-90);
-			setMotorTarget(klomotor, klo_loeft, 100);		// drej tilbage mod banen									    // Kør ud af skydeskive
-			while (SensorValue(colorsense) > perfect_line)  // Imens sensoren læser hvid
+			while (getMotorEncoder(motorL) < 0) // Imens motorencoderen er over nulpunktet
 			{
-				driveSpeed(20,20);
+				driveSpeed(-20, -20);
 			}
-			drive(30);  // Kør yderligere 20 frem
+			drive(-22);  // Kør yderligere 20 cm tilbage
+			aaben_klo(); // Kloen åbnes og flasken stilles
+			drive(-50);  // Kør yderligere 20 cm tilbage
+			dreje(-100);
+			setMotorTarget(klomotor, klo_loeft, 100);	  // drej tilbage mod banen									    // Kør ud af skydeskive
+			while (SensorValue(colorsense) > perfect_line) // Imens sensoren læser hvid
+			{
+				driveSpeed(20, 20);
+			}
+			drive(20);  // Kør yderligere 20 frem
 			dreje(-45); // dreje tilbage på banen
-			PID_distance(30);
+			PID_distance(20);
+			drive(10);
 			dreje(-90);
 		}
 		curr_task++;
@@ -812,7 +839,7 @@ void task7()
 	{
 		for (int i; i < 1; i++)
 		{
-			//setMotorTarget(klomotor, klo_loeft, 100);
+			/*//setMotorTarget(klomotor, klo_loeft, 100);
 			drive(42);
 			dreje(-35);
 			drive(16);
@@ -820,6 +847,17 @@ void task7()
 			while (time1[timer3] < 3100)
 			{
 				driveSpeed(38,24);
+			}
+			dreje(-50);
+			drive(30);*/
+
+			drive(42);
+			dreje(-35);
+			drive(16);
+			clearTimer(timer3);
+			while (time1[timer3] < 3000)
+			{
+				driveSpeed(38,22);
 			}
 			dreje(-50);
 			drive(30);
@@ -865,8 +903,8 @@ task main()
 		if (curr_task == 0) // done
 		{
 			klo_cal();   // Kloen kalibreres som det første, så vi ved hvor den er
-			color_cal(); // farvekalibrering kører i starten
-			introSong();
+			//color_cal(); // farvekalibrering kører i starten
+			//introSong();
 			curr_task++;
 		}
 
