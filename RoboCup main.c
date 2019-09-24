@@ -9,7 +9,7 @@
 // Sættes til true når task9 er gennemført
 bool racedone = false;
 // Bruges til at holde værdien af den nuværende opgave
-int curr_task = 5;
+int curr_task = 4;
 // Bruges til at holde styr på antallet af krydsede sorte linjer
 int black_counter = 0;
 // variabel til at holde information om den kalibrerede linje
@@ -117,7 +117,7 @@ void PID_distance(float cm, float speed = 20)
 		distance = (distanceR + distanceL) / 2;
 		Linefollow_PID(speed); //linefollow
 	}
-	delay(200);
+	//delay(200);
 }
 
 // Funktion som stopper begge motorer
@@ -184,7 +184,7 @@ void drive(float CM, int speedX = 20)
 }
 
 //scanner til x grader venstre og y grader hoejre. I V3 scanner den twice og finder position ud fra det
-void scan(float venstre_scan = 45, float hojre_scan = 45, float min_dist = 7) //min dist er distancen genstanden mindst skal vaere vaek for at blive registreret
+void scan(float venstre_scan = 45, float hojre_scan = 45, float min_dist = 7)
 {
     float old_scan_dist0 = 256.0; //old_scan_dist og scan_direction gemmer distancen af tingen der er tættest paa
     float old_scan_dist1 = 256.0; // og gemmer hjulenes position ved den retning
@@ -521,8 +521,6 @@ void CelebrationMusic()
 	}
 }
 
-
-
 //
 // Funktionerne til de individuelle opgaver.
 //
@@ -582,8 +580,9 @@ void task2()
 			setMotorTarget(klomotor, klo_aaben, 100);
 			drive(20, 50);
 			dreje(90);
-			PID_distance(10);
-			scan(20,20);
+			setMotorTarget(klomotor, klo_aaben, 100);
+			PID_distance(8);
+			scan(30,30);
 			flaskevej++;
 		}
 
@@ -591,12 +590,12 @@ void task2()
 		{
 			if (getUSDistance(ultrasense) >= 20)
 			{
-				driveSpeed(10,10);
+				driveSpeed(15,15);
 			}
 
 			if (getUSDistance(ultrasense) >= 8.5 && getUSDistance(ultrasense) < 20 || getUSDistance(ultrasense) < 7)
 			{
-				driveSpeed(4,4);
+				driveSpeed(8,8);
 			}
 			if (getUSDistance(ultrasense) < 8.5 && getUSDistance(ultrasense) >= 7)
 			{
@@ -606,32 +605,32 @@ void task2()
 		while (flaskevej == 2) // løfter flasken.
 		{
 			driveStop();
-			delay(500);
+			//delay(500);
 			int motorlcode = getMotorEncoder(motorL);
 			int motorrcode = getMotorEncoder(motorR);
 			setMotorTarget(motorL, motorlcode - 100, 3);
 			setMotorTarget(motorR, motorrcode - 100, 3);
 			loeft_klo(); // Løft klo mens robotten står stille
 			setLEDColor(ledRed);
-			delay(3000);
+			//delay(3000);
 			flaskevej++;
 		}
 
 		while (flaskevej == 3) // k6rer til den sorte streg og lægger flasken
 		{
-			drive(20, 30);
+			drive(30, 30);
 			//black_counter = 4;
-			delay(2000);
+			//delay(2000);
 			driveStop();
 			aaben_klo();
 			setLEDColor(ledGreen);
-			delay(2000);
+			//delay(2000);
 			flaskevej++;
 		}
 
 		while (flaskevej == 4) // kører baglæns.
 		{
-			drive(-20, 30);
+			drive(-30, 30);
 			dreje(-135);
 			flaskevej++;
 		}
@@ -662,12 +661,13 @@ void task3()
 	}
 	if (black_counter == 4)
 	{
-		Linefollow_PID();
+		Linefollow_PID(40);
 	}
 	if (black_counter == 5)
 	{
 		for (int i; i < 1; i++)
 		{
+			setMotorTarget(klomotor, klo_loeft, 100);
 			drive(25, 30); // Kør frem til linjen
 			dreje(-90);	// drej 90 grader for at komme rigtigt på næste linje
 		}
@@ -748,11 +748,10 @@ void task5()
 		for (int i; i < 1; i++)
 		{
 			drive(60, 20); //Kør frem til midten uden PID											   // reset motorencoder
-			dreje(-40);
+			dreje(-35);
 			delay(2000);
 			scan(35, 35 ,25);
-			resetMotorEncoder(motorL);
-			resetMotorEncoder(motorR);												 // scan efter flaske, og peg på den
+			resetME();										 // scan efter flaske, og peg på den
 			while (ultrafilter(20) > 8.5 || ultrafilter(20) < 7) // Imens ultrasense er mellem 7.8 og 70 cm
 			{
 				driveSpeed(20, 20);
@@ -772,15 +771,15 @@ void task5()
 			drive(-50);  // Kør yderligere 20 cm tilbage
 			dreje(-100);
 			setMotorTarget(klomotor, klo_loeft, 100);	  // drej tilbage mod banen									    // Kør ud af skydeskive
-			while (SensorValue(colorsense) > perfect_line) // Imens sensoren læser hvid
+			while (SensorValue(colorsense) > perfect_line)	 // Imens sensoren læser hvid
 			{
 				driveSpeed(20, 20);
 			}
-			drive(20);  // Kør yderligere 20 frem
-			dreje(-45); // dreje tilbage på banen
+			drive(18);  // Kør yderligere 20 frem
+			dreje(-55); // dreje tilbage på banen
 			PID_distance(20);
-			drive(10);
-			dreje(-90);
+			drive(20);
+			dreje(-45);
 		}
 		curr_task++;
 	}
@@ -860,7 +859,7 @@ void task7()
 				driveSpeed(38,22);
 			}
 			dreje(-50);
-			drive(30);
+			drive(24);
 		}
 		curr_task++;
 	}
