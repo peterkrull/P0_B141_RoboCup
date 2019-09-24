@@ -92,7 +92,7 @@ void Linefollow_PID(float speed = 30, bool followright = true)
 	// Game nuværende som forrige
 	prev_error = errors;
 
-	// Calculate PID
+	// Udregn korrigering på baggrund af PID
 	turn = (errors * Kp) + (error_sum * Ki) + (deltaErr * Kd);
 
 	// Set motor speed
@@ -161,7 +161,7 @@ void dreje(float turn_degrees)
 }
 
 // Bruges til at drive(x) antal centimeter
-void drive(float CM, int speedX = 30)
+void drive(float CM, int speedX = 40)
 {
 	driveStop();
 	float forwardT = (360 / (5.5 * PI)) * CM; //udregning af rotation i grader motoren skal køre
@@ -530,7 +530,7 @@ void task1()
 	if (black_counter == 0)
 	{
         //luk_klo();
-		Linefollow_PID(30);
+		Linefollow_PID();
 	}
 	if (black_counter == 1)
 	{
@@ -540,7 +540,7 @@ void task1()
 			drive(30);
 			dreje(-45);
 		}
-		Linefollow_PID(30);
+		Linefollow_PID();
 	}
 	if (black_counter == 2)
 	{
@@ -562,12 +562,13 @@ void task2()
 	}
 	if (black_counter == 2)
 	{
-		Linefollow_PID(40);
+		Linefollow_PID();
 	}
 	if (black_counter == 3)
 	{	
 		for (int i; i < 1; i++)
 		{
+			setMotorTarget(klomotor, klo_aaben, 100);
 			if (klo_kalibreret == false)
 			{
 				driveStop();
@@ -577,10 +578,8 @@ void task2()
 		int flaskevej = 0;
 		while (flaskevej == 0) // på langsiden
 		{
-			setMotorTarget(klomotor, klo_aaben, 100);
 			drive(20, 50);
 			dreje(90);
-			setMotorTarget(klomotor, klo_aaben, 100);
 			PID_distance(8);
 			scan(30,30);
 			flaskevej++;
@@ -678,7 +677,7 @@ void task3()
 		for (int i; i < 1; i++)
 		{
 			drive(50, 75);		   // Kør HURTIGT op over rampen
-			PID_distance(40);	  // Følg rampen med PID i 40 cm
+			PID_distance(85);	  // Følg rampen med PID i 40 cm
 			while (SensorValue(colorsense) > (gray_val - 5)) // Indtil sensoren ser mørk, følg linjen.
 			{
 				Linefollow_PID();
@@ -741,7 +740,7 @@ void task5()
 			dreje(-90);								 // Drej 90 grader mod den nye linje
 			setMotorTarget(klomotor, klo_aaben, 60); // �?ben kloen
 		}
-		Linefollow_PID(); // følg linjen
+		Linefollow_PID(20); // følg linjen
 	}
 	if (black_counter == 9)
 	{
@@ -778,8 +777,8 @@ void task5()
 			drive(18);  // Kør yderligere 20 frem
 			dreje(-55); // dreje tilbage på banen
 			PID_distance(20);
-			drive(20);
-			dreje(-45);
+			drive(22);
+			dreje(-90);
 		}
 		curr_task++;
 	}
@@ -797,7 +796,7 @@ void task6_8()
 
 	if (black_counter == 9 || black_counter == 11)
 	{
-		Linefollow_PID(30);
+		Linefollow_PID();
 	}
 	else if (black_counter == 10 || black_counter == 12)
 	{
@@ -832,7 +831,7 @@ void task7()
 	}
 	if (black_counter == 10)
 	{
-		Linefollow_PID(30);
+		Linefollow_PID();
 	}
 	if (black_counter == 11)
 	{
@@ -872,7 +871,7 @@ void task9()
 	}
 	if (black_counter == 12)
 	{
-		Linefollow_PID(30);
+		Linefollow_PID();
 	}
 	if (black_counter == 13)
 	{
