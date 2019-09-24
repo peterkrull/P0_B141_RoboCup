@@ -9,7 +9,7 @@
 // Sættes til true når task9 er gennemført
 bool racedone = false;
 // Bruges til at holde værdien af den nuværende opgave
-int curr_task = 4;
+int curr_task = 0;
 // Bruges til at holde styr på antallet af krydsede sorte linjer
 int black_counter = 0;
 // variabel til at holde information om den kalibrerede linje
@@ -49,7 +49,7 @@ int ultrafilter(int count = 50)
 }
 
 // Bruges til at følge en linje ved hjælp af et PID udregninger
-void Linefollow_PID(float speed = 20, bool followright = true)
+void Linefollow_PID(float speed = 30, bool followright = true)
 {
 	// PID konstanter
 	float Kp = 0.2;
@@ -101,7 +101,7 @@ void Linefollow_PID(float speed = 20, bool followright = true)
 }
 
 // Bruges til at køre en bestemt distance med PID lonefollowing
-void PID_distance(float cm, float speed = 20)
+void PID_distance(float cm, float speed = 30)
 {
 	float maal = (360 / (5.5 * PI)) * cm;	  //Formel for at beregne hvor mange "ticks" den skal k?re for en hvis l?ngde(der er indsat 10cm)
 	resetMotorEncoder(motorL);				   //resetter venstre motors encoder
@@ -161,7 +161,7 @@ void dreje(float turn_degrees)
 }
 
 // Bruges til at drive(x) antal centimeter
-void drive(float CM, int speedX = 20)
+void drive(float CM, int speedX = 30)
 {
 	driveStop();
 	float forwardT = (360 / (5.5 * PI)) * CM; //udregning af rotation i grader motoren skal køre
@@ -268,7 +268,7 @@ void black_line_counter() //timer2
 }
 
 // Bruges til at kalibrere kloens placering
-void klo_cal(int klo_pos = klo_luk) //timer4
+void klo_cal(int klo_pos = klo_loeft) //timer4
 {
 	clearTimer(timer4);
 	while (klo_kalibreret == false)
