@@ -677,7 +677,8 @@ void task3()
 		for (int i; i < 1; i++)
 		{
 			drive(50, 75);		   // Kør HURTIGT op over rampen
-			PID_distance(85);	  // Følg rampen med PID i 40 cm
+			PID_distance(40);	  // Følg rampen med PID i 40 cm
+			PID_distance(40,15);
 			while (SensorValue(colorsense) > (gray_val - 5)) // Indtil sensoren ser mørk, følg linjen.
 			{
 				Linefollow_PID();
