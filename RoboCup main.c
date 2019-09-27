@@ -617,7 +617,7 @@ void task2()
 
 		while (flaskevej == 3) // k6rer til den sorte streg og lægger flasken
 		{
-			drive(30, 30);
+			drive(22, 30);
 			//black_counter = 4;
 			//delay(2000);
 			driveStop();
@@ -629,7 +629,7 @@ void task2()
 
 		while (flaskevej == 4) // kører baglæns.
 		{
-			drive(-30, 30);
+			drive(-22, 30);
 			dreje(-135);
 			flaskevej++;
 		}
@@ -681,7 +681,7 @@ void task3()
 			PID_distance(40,15);
 			while (SensorValue(colorsense) > (gray_val - 5)) // Indtil sensoren ser mørk, følg linjen.
 			{
-				Linefollow_PID();
+				Linefollow_PID(20);
 			}
 			driveStop();
 			delay(1000);
@@ -890,11 +890,14 @@ void task10()
 {
 	CelebrationMusic();
 	racedone = true;
-}
+} 
 
 task main()
 {
-	perfect_line = gray_val + ((white_val - gray_val) / 2); // Udregner den perfekte linje én gang i starten
+
+	perfect_line = gray_val + ((white_val - gray_val) / 2);     // Udregner den perfekte linje én gang i starten
+
+
 	while (racedone == false)								// Main loop til at køre når race endnu ikke er færdig
 	{
 		black_line_counter(); // Den sorte tæller kører altid, bortset fra når anden opgave udføres
