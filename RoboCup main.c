@@ -9,7 +9,7 @@
 // Sættes til true når task9 er gennemført
 bool racedone = false;
 // Bruges til at holde værdien af den nuværende opgave
-int curr_task = 0;
+int curr_task = 4;
 // Bruges til at holde styr på antallet af krydsede sorte linjer
 int black_counter = 0;
 // variabel til at holde information om den kalibrerede linje
@@ -139,8 +139,8 @@ void dreje(float turn_degrees)
 {
 	driveStop();
 	float hjul_om = 5.5;												   //hjulets omkreds i cm
-	float sporvidde = 13.4;												   //sporvidde p� bilen
-	float correction = 1.032;											   //float til at lave sm� corrections p� m�ngden bilen drejer
+	float sporvidde = 13.4;												   //sporvidde p? bilen
+	float correction = 1.032;											   //float til at lave sm? corrections p? m?ngden bilen drejer
 	float calc_turn = correction * (sporvidde * (turn_degrees / hjul_om)); //udregning af antal grader motoren skal dreje
 	resetMotorEncoder(motorL);
 	resetMotorEncoder(motorR);
@@ -279,7 +279,7 @@ void klo_cal(int klo_pos = klo_loeft) //timer4
 		}
 		setMotorSpeed(klomotor, -70);
 		if (getTouchValue(homesense) == 1)
-		{ //inds�t switchnavn p� "a"'s plads
+		{ //inds?t switchnavn p? "a"'s plads
 			setMotorSpeed(klomotor, 0);
 			resetMotorEncoder(klomotor);
 			setMotorTarget(klomotor, klo_pos, 100);
@@ -294,7 +294,7 @@ void klo_cal(int klo_pos = klo_loeft) //timer4
 // Holder stille mens kloen åbnes
 void aaben_klo()
 {
-    while (getMotorEncoder(klomotor) < (klo_aaben - 6)) // �?bner kloen
+    while (getMotorEncoder(klomotor) < (klo_aaben - 6)) // ??bner kloen
     {
         setMotorSpeed(klomotor, 100); // Slip flasken
     }
@@ -660,25 +660,34 @@ void task3()
 	}
 	if (black_counter == 4)
 	{
-		Linefollow_PID(40);
+		Linefollow_PID();
 	}
 	if (black_counter == 5)
 	{
 		for (int i; i < 1; i++)
 		{
 			setMotorTarget(klomotor, klo_loeft, 100);
-			drive(25, 30); // Kør frem til linjen
-			dreje(-90);	// drej 90 grader for at komme rigtigt på næste linje
+			//drive(25, 30); // Kør frem til linjen
+			//dreje(-90);	// drej 90 grader for at komme rigtigt på næste linje
+			//clearTimer(T2);
+			//while(time1[T2]<2500)
+				//{
+					//driveSpeed(14,30);
+				//}
+			drive(10);
+			dreje(-60);
+			drive(25);
+			dreje(-34);
 		}
-		Linefollow_PID(); // følg linjen igen
+		Linefollow_PID(20); // følg linjen igen
 	}
 	if (black_counter == 6)
 	{
 		for (int i; i < 1; i++)
 		{
 			drive(50, 75);		   // Kør HURTIGT op over rampen
-			PID_distance(40);	  // Følg rampen med PID i 40 cm
-			PID_distance(40,15);
+			PID_distance(20);	  // Følg rampen med PID i 40 cm
+			PID_distance(30,15);
 			while (SensorValue(colorsense) > (gray_val - 5)) // Indtil sensoren ser mørk, følg linjen.
 			{
 				Linefollow_PID(20);
@@ -687,7 +696,7 @@ void task3()
 			delay(1000);
 			drive(20);			   // Kør 20 cm ned over rampen
 			PID_distance(30);	  // Tænd for PID over 32 CM
-			drive(15);
+			drive(18);
 			dreje(-90);			   // Dreje 90 grader tilbage på sporet
 		}
 		curr_task++;
@@ -739,7 +748,7 @@ void task5()
 			}
 			PID_distance(22);						 // Følg linjen i 20 cm
 			dreje(-90);								 // Drej 90 grader mod den nye linje
-			setMotorTarget(klomotor, klo_aaben, 60); // �?ben kloen
+			setMotorTarget(klomotor, klo_aaben, 60); // ??ben kloen
 		}
 		Linefollow_PID(20); // følg linjen
 	}
