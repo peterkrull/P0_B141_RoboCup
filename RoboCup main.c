@@ -34,18 +34,18 @@ const int klo_loeft = 0;
 // Sætter motorhastigheden på begge motorer
 void driveSpeed(int Left, int Right)
 {
-	setMotorSpeed(motorL, -Left);
-	setMotorSpeed(motorR, -Right);
+	setMotorSpeed(motorL, -Left);	// sætter venstre motorhastighed
+	setMotorSpeed(motorR, -Right);	// sætter højre motorhastighed
 }
 
 int ultrafilter(int count = 50)
 {
-	int sum = 0;
-	for (int i = 0; i < count ; i++)
+	int sum = 0; // int til at holde værdien af summen
+	for (int i = 0; i < count ; i++) // følgende kode gentages *count* antal gange
 	{
-		sum = sum + getUSDistance(ultrasense);
+		sum = sum + getUSDistance(ultrasense); // Ultrasonisk sensor aflæses og summeres
 	}
-	return sum / count;
+	return sum / count; // summen divideret med antal målinger; gennemsnit
 }
 
 // Bruges til at følge en linje ved hjælp af et PID udregninger
@@ -103,18 +103,18 @@ void Linefollow_PID(float speed = 30, bool followright = true)
 // Bruges til at køre en bestemt distance med PID lonefollowing
 void PID_distance(float cm, float speed = 30)
 {
-	float maal = (360 / (5.5 * PI)) * cm;	  //Formel for at beregne hvor mange "ticks" den skal k?re for en hvis l?ngde(der er indsat 10cm)
-	resetMotorEncoder(motorL);				   //resetter venstre motors encoder
-	resetMotorEncoder(motorR);				   //resetter højre motors encoder
-	float distanceR = getMotorEncoder(motorR); //giver værdien for h?jre og venste's encoder
-	float distanceL = getMotorEncoder(motorL);
-	float distance = (distanceR + distanceL) / 2; //gennemsnit for de to tick v?rdier
+	float maal = (360 / (5.5 * PI)) * cm;	  		//Formel for at beregne hvor mange "ticks" den skal køre for en hvis l?ngde(der er indsat 10cm)
+	resetMotorEncoder(motorL);				   		//resetter venstre motors encoder
+	resetMotorEncoder(motorR);				   		//resetter højre motors encoder
+	float distanceR = getMotorEncoder(motorL); 		//giver værdien for venstre encoder
+	float distanceL = getMotorEncoder(motorR);		//giver værdien for højre encoder
+	float distance = (distanceR + distanceL) / 2; 	//gennemsnit for de to tick v?rdier
 
 	while (distance < maal)
 	{ // while loop der stoppe n?r robotten har k?rt en x l?ngde
 		distanceR = -getMotorEncoder(motorR);
 		distanceL = -getMotorEncoder(motorL);
-		distance = (distanceR + distanceL) / 2;
+		distance = (distanceR + distanceL) / 2; // gennemsnittet af de to encoders distance udregnes
 		Linefollow_PID(speed); //linefollow
 	}
 	//delay(200);
@@ -139,25 +139,24 @@ void dreje(float turn_degrees)
 {
 	driveStop();
 	float hjul_om = 5.5;												   //hjulets omkreds i cm
-	float sporvidde = 13.4;												   //sporvidde p? bilen
-	float correction = 1.032;											   //float til at lave sm? corrections p? m?ngden bilen drejer
+	float sporvidde = 13.4;												   //sporvidde på bilen
+	float correction = 1.032;											   //float til at lave små corrections på mængden bilen drejer
 	float calc_turn = correction * (sporvidde * (turn_degrees / hjul_om)); //udregning af antal grader motoren skal dreje
 	resetMotorEncoder(motorL);
 	resetMotorEncoder(motorR);
 
-	while (abs(getMotorEncoder(motorL)) < (abs(calc_turn) - 6))
+	while (abs(getMotorEncoder(motorL)) < (abs(calc_turn) - 6)) // imens motorencoderen ikke endnu ikke er nået den ønskede værdi
 	{
-		if (turn_degrees > 0)
+		if (turn_degrees > 0) // hvis positivt fortegn
 		{
-			driveSpeed(10,-10);
+			driveSpeed(10,-10);  // drej mod høre
 		}
-		if (turn_degrees < 0)
+		if (turn_degrees < 0) // hvis negativt fortegn
 		{
-			driveSpeed(-10,10);
+			driveSpeed(-10,10); // drej mod venstre
 		}
 	}
 	driveStop();
-	//delay(200);
 }
 
 // Bruges til at drive(x) antal centimeter
@@ -168,19 +167,18 @@ void drive(float CM, int speedX = 40)
 	resetMotorEncoder(motorL);				  //5,5 er hjulstørrelsen
 	resetMotorEncoder(motorR);
 
-	while (abs(getMotorEncoder(motorL)) < (abs(forwardT) - 6))
+	while (abs(getMotorEncoder(motorL)) < (abs(forwardT) - 6)) // imens motorencoderen endnu ikke er nået den ønskede værdi
 	{
-		if (CM < 0)
+		if (CM < 0) // hvis negativt fortegn
 		{
-			driveSpeed(-speedX,-speedX);
+			driveSpeed(-speedX,-speedX); // kør med negativ hastighed
 		}
-		if (CM > 0)
+		if (CM > 0) // hvis positivt fortegn
 		{
-			driveSpeed(speedX,speedX);
+			driveSpeed(speedX,speedX); // kør med positiv hastighed
 		}
 	}
 	driveStop();
-	//delay(200);
 }
 
 //scanner til x grader venstre og y grader hoejre. I V3 scanner den twice og finder position ud fra det
@@ -259,9 +257,12 @@ void coinSound()
 // Tæller hvor mange sorte linjer robotten kører over.
 void black_line_counter() //timer2
 {
+	// Hvis det er mere end 3 sekunder siden at timer 2 er blevet resat
+	// og sensorens aflæste værdi er under den sorte værdi
+	// og knappen på robotten ikke bliver holdt inde...
 	if (time1[T2] > 3000 && SensorValue(colorsense) < black_val && SensorValue(calbutton) == 0)
 	{
-		//coinSound();
+		// ... optæl en sort streg og reset timeren
 		black_counter++;
 		clearTimer(T2);
 	}
@@ -270,8 +271,8 @@ void black_line_counter() //timer2
 // Bruges til at kalibrere kloens placering
 void klo_cal(int klo_pos = klo_loeft) //timer4
 {
-	clearTimer(timer4);
-	while (klo_kalibreret == false)
+	clearTimer(timer4); 
+	while (klo_kalibreret == false) // Holder kalibreringen i gang
 	{
 		while (time1[timer4] < 500)
 		{
@@ -286,7 +287,7 @@ void klo_cal(int klo_pos = klo_loeft) //timer4
 			while (getMotorEncoder(klomotor) < klo_pos - 4)
 			{
 			}
-			klo_kalibreret = true;
+			klo_kalibreret = true; // afslutter kalibrering. bruges af opgave 2 og 5
 		}
 	}
 }
@@ -352,7 +353,7 @@ void color_cal() //timer3
 	int calstate = 0;
 	while (color_cal == true) // Når kalibrering er startet,
 	{
-		if (calstate == 0)
+		if (calstate == 0) // Introskærm til farvekalibrering
 		{
 			displayCenteredBigTextLine(2, "Calibrating");
 			displayCenteredBigTextLine(4, "color sensor");
@@ -360,27 +361,27 @@ void color_cal() //timer3
 			eraseDisplay();
 			calstate++;
 		}
-		else if (calstate == 1)
+		else if (calstate == 1) // den grå farve kalibreres
 		{
-			char gray_val_LCD[15];
-			int sens = SensorValue[colorsense];
-			sprintf(gray_val_LCD, "Gray val: %3d", sens);
-			displayCenteredBigTextLine(2, gray_val_LCD);
-			displayCenteredTextLine(4, "");
-			displayCenteredTextLine(5, "press button to calibrate");
-			if (SensorValue[calbutton] == 1)
+			char gray_val_LCD[15]; // char array til at holde en linje tekst
+			int sens = SensorValue[colorsense]; // farvesensorens værdi indsættes i en int
+			sprintf(gray_val_LCD, "Gray val: %3d", sens); // sprintf bruges til at formatere tekst og tal ind i vores char array
+			displayCenteredBigTextLine(2, gray_val_LCD); // vores char array udskrives til skærmen
+			displayCenteredTextLine(4, ""); // blank linje
+			displayCenteredTextLine(5, "press button to calibrate"); // tekst til bruger
+			if (SensorValue[calbutton] == 1) // hvis knappen bliver trykket
 			{
-				gray_val = SensorValue[colorsense];
-				eraseDisplay();
-				displayCenteredBigTextLine(2, "Gray calibrated");
-				setLEDColor(ledGreen);
-				sleep(1500);
-				eraseDisplay();
-				setLEDColor(ledOff);
-				calstate++;
+				gray_val = SensorValue[colorsense]; // overskriv den forrige værdi for grå
+				eraseDisplay(); // fjern forrige tekst fra displayet
+				displayCenteredBigTextLine(2, "Gray calibrated"); // bekræftigelse om udført kalibrering
+				setLEDColor(ledGreen); // sæt LED grøn
+				sleep(1500); // vent 1500ms
+				eraseDisplay(); // clear displayet
+				setLEDColor(ledOff); // sluk LED
+				calstate++; // fortsæt til næste kalibreringsstadie
 			}
 		}
-		else if (calstate == 2)
+		else if (calstate == 2) // den hvide farve kalibreres ... kommentarer fra forrige er gældende her
 		{
 			char white_val_LCD[15];
 			int sens = SensorValue[colorsense];
@@ -400,18 +401,17 @@ void color_cal() //timer3
 				calstate++;
 			}
 		}
-		else if (calstate == 3)
+		else if (calstate == 3) // afsluttende stadie af kalibrering
 		{
-			perfect_line = gray_val + ((white_val - gray_val) / 2);
-			displayCenteredBigTextLine(2, "Calibration");
+			perfect_line = gray_val + ((white_val - gray_val) / 2); // perfect line udregnes
+			displayCenteredBigTextLine(2, "Calibration"); // tekst til bruger om succes
 			displayCenteredBigTextLine(4, "done...");
 			sleep(1000);
-			displayCenteredBigTextLine(8, "Place robot");
+			displayCenteredBigTextLine(8, "Place robot"); // gør robotten klar til at køre
 			displayCenteredBigTextLine(10, "on the line");
 			sleep(2000);
-			eraseDisplay();
-			curr_task++;
-			color_cal = false;
+			eraseDisplay(); // clear displayet
+			color_cal = false; // sæt color_cal til false, for at komme ud af while-loopet
 		}
 	}
 }
@@ -667,13 +667,6 @@ void task3()
 		for (int i; i < 1; i++)
 		{
 			setMotorTarget(klomotor, klo_loeft, 100);
-			//drive(25, 30); // Kør frem til linjen
-			//dreje(-90);	// drej 90 grader for at komme rigtigt på næste linje
-			//clearTimer(T2);
-			//while(time1[T2]<2500)
-				//{
-					//driveSpeed(14,30);
-				//}
 			drive(10);
 			dreje(-60);
 			drive(25);
@@ -847,18 +840,6 @@ void task7()
 	{
 		for (int i; i < 1; i++)
 		{
-			/*//setMotorTarget(klomotor, klo_loeft, 100);
-			drive(42);
-			dreje(-35);
-			drive(16);
-			clearTimer(timer3);
-			while (time1[timer3] < 3100)
-			{
-				driveSpeed(38,24);
-			}
-			dreje(-50);
-			drive(30);*/
-
 			drive(42);
 			dreje(-35);
 			drive(16);
@@ -906,7 +887,6 @@ task main()
 
 	perfect_line = gray_val + ((white_val - gray_val) / 2);     // Udregner den perfekte linje én gang i starten
 
-
 	while (racedone == false)								// Main loop til at køre når race endnu ikke er færdig
 	{
 		black_line_counter(); // Den sorte tæller kører altid, bortset fra når anden opgave udføres
@@ -914,9 +894,9 @@ task main()
 		if (curr_task == 0) // done
 		{
 			klo_cal();   // Kloen kalibreres som det første, så vi ved hvor den er
-			//color_cal(); // farvekalibrering kører i starten
-			//introSong();
-			curr_task++;
+			color_cal(); // farvekalibrering kører i starten
+			introSong(); // intro sang
+			curr_task++; // fortsætter til første opgave
 		}
 
 		if (curr_task == 1) // done
@@ -924,12 +904,12 @@ task main()
 			task1();
 		}
 
-		if (curr_task == 2) // somewhat
+		if (curr_task == 2) // done
 		{
 			task2();
 		}
 
-		if (curr_task == 3) // somewhat
+		if (curr_task == 3) // done
 		{
 			task3();
 		}
@@ -949,12 +929,12 @@ task main()
 			task6_8();
 		}
 
-		if (curr_task == 7) // tweaking
+		if (curr_task == 7) // done
 		{
 			task7();
 		}
 
-		if (curr_task == 9) // somewhat
+		if (curr_task == 9) // done
 		{
 			task9();
 		}
